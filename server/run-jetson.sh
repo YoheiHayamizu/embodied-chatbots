@@ -30,8 +30,16 @@ export PORT="${PORT:-7860}"
 
 # Jetson-friendly service defaults — override in the environment if the
 # model choice or device placement needs to change.
+#
+# STT_DEVICE defaults to cpu on aarch64 because the PyPI ctranslate2
+# wheels for aarch64 are built without CUDA support. Running on GPU
+# requires building ctranslate2 from source against JetPack's cuDNN.
 export LLM_PROVIDER="${LLM_PROVIDER:-anthropic}"
-export STT_DEVICE="${STT_DEVICE:-cuda}"
+if [[ "$(uname -m)" == "aarch64" ]]; then
+  export STT_DEVICE="${STT_DEVICE:-cpu}"
+else
+  export STT_DEVICE="${STT_DEVICE:-cuda}"
+fi
 export STT_COMPUTE_TYPE="${STT_COMPUTE_TYPE:-int8}"
 export STT_MODEL="${STT_MODEL:-small}"
 export PIPER_VOICE="${PIPER_VOICE:-en_US-ryan-high}"
