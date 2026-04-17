@@ -1,79 +1,110 @@
-# Voice Agent Server
+# Embodied Chatbots — SmallWebRTC Voice Agent Server
 
-A Pipecat-based voice agent exposed over WebRTC. Runs local Whisper STT and Piper TTS; delegates LLM work to a pluggable cloud provider.
+A local development server that streams voice audio between a browser and a
+pipecat pipeline (Whisper STT → LLM → Piper TTS) over WebRTC. The pipeline is
+the same shape as the local-audio reference in `main.py`, but audio enters and
+leaves through a browser-driven `SmallWebRTCTransport` instead of the host's
+soundcard.
 
-## Components
+## Layout
 
 ```
-Browser / Jetson (aiortc)
-  ──WebRTC (audio, SDP via /api/offer)──▶
-      FastAPI (app.py)
-        └─ SmallWebRTCTransport
-             └─ Pipeline
-                  ├─ Whisper STT  (local, Faster Whisper)
-                  ├─ LLM          (cloud: Claude / GPT / Gemini)
-                  └─ Piper TTS    (local)
+server/
+├── __init__.py
+├── app.py              # FastAPI app: /api/offer, /health, static mount
+├── bot.py              # Pipeline builder + run_bot(connection)
+├── llm_factory.py      # Anthropic / OpenAI / Google switch + shared prompt
+├── run.sh              # uv run uvicorn launcher
+├── static/
+│   ├── index.html      # Browser UI
+│   └── app.js          # Pipecat JS client wiring (esm.sh, no build step)
+└── tests/
+    └── test_llm_factory.py
 ```
 
-## Supported LLM providers
+## Prerequisites
 
-Controlled via the `LLM_PROVIDER`.
+- Python 3.12, `uv` (already used at repo root).
+- Dependencies installed via the root `pyproject.toml`
+  (`pipecat-ai[webrtc,whisper,piper,silero,anthropic,openai,google,runner]`,
+  `fastapi`, `uvicorn`, `piper-tts`, `torch`).
+- A provider API key in `.env` at the repo root (see `env.example`), at least
+  one of `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY` depending on
+  `LLM_PROVIDER`.
+- A Chromium-based browser (Chrome/Edge) or Firefox at `http://localhost:7860`.
+  Browsers only grant microphone permission to secure origins; `localhost` is
+  considered secure. Any other origin needs HTTPS.
 
-| `LLM_PROVIDER` | Default model         | API key env var    |
-| -------------- | --------------------- | ------------------ |
-| `anthropic`    | `claude-haiku-4-5`    | `ANTHROPIC_API_KEY`|
-| `openai`       | `gpt-4o-mini`         | `OPENAI_API_KEY`   |
-| `google`       | `gemini-2.0-flash`    | `GOOGLE_API_KEY`   |
-
-Override the model with `LLM_MODEL` environment variable if needed.
-
-## Setup
-
-From the repository root:
+## Running
 
 ```bash
-uv add "pipecat-ai[silero,whisper,webrtc,anthropic,openai,google]" \
-       piper-tts fastapi uvicorn python-dotenv
+./server/run.sh
+# Equivalent to:
+# uv run uvicorn server.app:app --host localhost --port 7860 --reload
 ```
 
-Copy the env template and fill in one provider's key:
+Open `http://localhost:7860`, click **Connect**, accept the microphone prompt,
+and the bot will greet you when the pipeline is ready. Transcript bubbles
+appear as RTVI messages stream in over the data channel.
+
+## Environment variables
+
+| Variable | Default | Notes |
+| --- | --- | --- |
+| `LLM_PROVIDER` | `anthropic` | One of `anthropic`, `openai`, `google`. |
+| `LLM_MODEL` | provider default | Overrides the default model for the chosen provider. |
+| `ANTHROPIC_API_KEY` | — | Required when `LLM_PROVIDER=anthropic`. |
+| `OPENAI_API_KEY` | — | Required when `LLM_PROVIDER=openai`. |
+| `GOOGLE_API_KEY` | — | Required when `LLM_PROVIDER=google`. |
+| `STT_MODEL` | `large-v3-turbo` | Faster-whisper model identifier. |
+| `STT_DEVICE` | `auto` | `auto`, `cuda`, or `cpu`. |
+| `STT_COMPUTE_TYPE` | `int8` | `int8`, `int8_float16`, `float16`, `float32`. |
+| `PIPER_VOICE` | `en_US-ryan-high` | Piper voice identifier. |
+| `PIPER_MODEL_DIR` | `../models/piper` | Where Piper voices are cached. |
+| `HOST` / `PORT` / `RELOAD_FLAG` | `localhost` / `7860` / `--reload` | Consumed by `run.sh`. |
+
+## Provider defaults
+
+| Provider | Default model |
+| --- | --- |
+| `anthropic` | `claude-haiku-4-5` |
+| `openai` | `gpt-4o-mini` |
+| `google` | `gemini-2.0-flash` |
+
+Override with `LLM_MODEL=<name>`.
+
+## Architectural notes
+
+- `SmallWebRTCRequestHandler` is configured in `ConnectionMode.SINGLE`. A second
+  concurrent browser tab will be rejected with HTTP 400 until the first one
+  closes. This matches the "one robot, one user" intent.
+- The opening greeting is queued inside the RTVI `on_client_ready` handler. If
+  we instead queued it at pipeline build time, the first audio frames could be
+  produced before the data channel was open and the browser would miss them.
+- The pipeline relies on the browser's built-in echo cancellation
+  (`getUserMedia` default constraints). There is no server-side audio gate in
+  this build. For far-field speaker/microphone setups (e.g. on-device robot
+  deployment) a server-side gate will need to be reintroduced.
+- Piper and faster-whisper both manage their own model caches. First run will
+  download the selected voice/model; point `PIPER_MODEL_DIR` elsewhere if you
+  want to bake models into an image.
+
+## Tests
 
 ```bash
-cp env.example .env
-# edit .env
+uv run pytest server/tests
 ```
 
-## Run
+The existing `test_llm_factory.py` covers provider dispatch without hitting any
+network. Add FastAPI route tests here if the surface grows.
 
-```bash
-cd server
-uv run python app.py
-```
+## Troubleshooting
 
-Then open <http://localhost:7860> in a browser and click **Connect**.
-
-On first launch:
-
-- Whisper downloads the `distil-medium.en` weights.
-- Piper downloads the `en_US-ryan-high` voice into `../models/piper/`.
-
-Subsequent runs are fast.
-
-## Switching providers
-
-```bash
-LLM_PROVIDER=openai uv run python app.py
-LLM_PROVIDER=google LLM_MODEL=gemini-2.0-flash-exp uv run python app.py
-```
-
-## Health check
-
-```bash
-curl http://localhost:7860/health
-```
-
-## Next steps
-
-1. Validate the flow from a laptop browser (browser AEC masks the echo problem during development).
-2. Move the client to a Python `aiortc` implementation running on the Jetson.
-3. Add PipeWire `module-echo-cancel` on the Jetson once a physical speaker replaces headphones.
+- **No bot audio** — check browser console for RTVI errors. Confirm a valid API
+  key for the selected provider; the bot fails to build if the factory raises.
+- **Microphone blocked** — browser requires a secure origin. Use `localhost` or
+  serve behind HTTPS via a reverse proxy.
+- **`400 PC ID mismatch`** — you have two tabs open. Close one; single-connection
+  mode is intentional.
+- **STT latency is high** — try `STT_MODEL=distil-medium.en` or set
+  `STT_DEVICE=cuda` if a compatible GPU is available on the host.

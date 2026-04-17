@@ -1,12 +1,16 @@
 """LLM provider factory.
 
-Selects a Pipecat LLM service implementation based on the LLM_PROVIDER
-environment variable. Supported values:
+Selects a pipecat LLM service implementation based on the LLM_PROVIDER
+environment variable. The shared system prompt lives here so that swapping
+providers does not drift the bot's voice and style.
 
-    anthropic  -> Claude Haiku 4.5
-    openai     -> GPT-4o-mini
-    google     -> Gemini 2.0 Flash
+Supported providers:
+  - anthropic -> AnthropicLLMService (default model: claude-haiku-4-5)
+  - openai    -> OpenAILLMService    (default model: gpt-4o-mini)
+  - google    -> GoogleLLMService    (default model: gemini-2.0-flash)
 """
+
+from __future__ import annotations
 
 import os
 from typing import Literal
@@ -15,18 +19,18 @@ from loguru import logger
 
 Provider = Literal["anthropic", "openai", "google"]
 
-SYSTEM_INSTRUCTION = (
-    "You are a voice assistant embodied in a Unitree G1 humanoid robot. "
-    "Your responses are spoken aloud through a text-to-speech system. "
+SYSTEM_PROMPT = (
+    "You are the voice of a friendly humanoid robot assistant. "
+    "Your words are spoken aloud through a text-to-speech system. "
     "Follow these rules strictly:\n"
     "- Reply in English only.\n"
-    "- Do not use emojis, bullet points, markdown, or code blocks.\n"
-    "- Keep replies to one or two short sentences.\n"
+    "- Do not use emojis, bullet points, markdown, or code fences.\n"
+    "- Keep each reply to one or two short sentences.\n"
     "- Ask a clarifying question when the request is ambiguous.\n"
-    "- Do not narrate internal reasoning."
+    "- Do not narrate internal reasoning or describe your own actions."
 )
 
-DEFAULT_MODELS: dict[Provider, str] = {
+DEFAULT_MODELS: dict[str, str] = {
     "anthropic": "claude-haiku-4-5",
     "openai": "gpt-4o-mini",
     "google": "gemini-2.0-flash",
@@ -42,48 +46,54 @@ def _require_env(key: str) -> str:
     return value
 
 
-def create_llm_service(provider: str = "anthropic"):
+def build_llm(provider: str | None = None):
     """Build the configured LLM service.
 
-    Returns a Pipecat LLM service instance ready to drop into a Pipeline.
+    Args:
+        provider: Override for the provider. Falls back to the ``LLM_PROVIDER``
+            environment variable, then to ``"anthropic"``.
+
+    Returns:
+        A pipecat LLM service instance ready to insert into a ``Pipeline``.
     """
-    model = os.getenv("LLM_MODEL", DEFAULT_MODELS.get(provider, ""))  # type: ignore[arg-type]
+    resolved = (provider or os.getenv("LLM_PROVIDER") or "anthropic").lower()
+    model = os.getenv("LLM_MODEL") or DEFAULT_MODELS.get(resolved, "")
 
-    logger.info(f"LLM provider={provider} model={model}")
+    logger.info(f"LLM provider={resolved} model={model or '<service default>'}")
 
-    if provider == "anthropic":
+    if resolved == "anthropic":
         from pipecat.services.anthropic.llm import AnthropicLLMService
 
         return AnthropicLLMService(
             api_key=_require_env("ANTHROPIC_API_KEY"),
             settings=AnthropicLLMService.Settings(
-                model=model,
-                system_instruction=SYSTEM_INSTRUCTION,
+                model=model or DEFAULT_MODELS["anthropic"],
+                system_instruction=SYSTEM_PROMPT,
             ),
         )
 
-    if provider == "openai":
+    if resolved == "openai":
         from pipecat.services.openai.llm import OpenAILLMService
 
         return OpenAILLMService(
             api_key=_require_env("OPENAI_API_KEY"),
             settings=OpenAILLMService.Settings(
-                model=model,
-                system_instruction=SYSTEM_INSTRUCTION,
+                model=model or DEFAULT_MODELS["openai"],
+                system_instruction=SYSTEM_PROMPT,
             ),
         )
 
-    if provider == "google":
+    if resolved == "google":
         from pipecat.services.google.llm import GoogleLLMService
 
         return GoogleLLMService(
             api_key=_require_env("GOOGLE_API_KEY"),
             settings=GoogleLLMService.Settings(
-                model=model,
-                system_instruction=SYSTEM_INSTRUCTION,
+                model=model or DEFAULT_MODELS["google"],
+                system_instruction=SYSTEM_PROMPT,
             ),
         )
 
     raise ValueError(
-        f"Unknown LLM_PROVIDER={provider!r}. Expected one of: anthropic, openai, google."
+        f"Unknown LLM_PROVIDER={resolved!r}. Expected one of: anthropic, openai, google."
     )

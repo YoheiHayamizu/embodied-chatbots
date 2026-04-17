@@ -3,375 +3,454 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>G1 Voice Agent — Dev Client</title>
+    <title>Embodied Voice Agent</title>
+    <link rel="icon" href="data:," />
     <style>
       :root {
         color-scheme: dark;
-        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+
+        --bg: oklch(16% 0.01 260);
+        --bg-elevated: oklch(21% 0.012 260);
+        --border: oklch(30% 0.015 260);
+        --text: oklch(95% 0.005 260);
+        --text-muted: oklch(68% 0.015 260);
+        --accent: oklch(72% 0.17 235);
+        --accent-strong: oklch(82% 0.17 235);
+        --user: oklch(70% 0.13 280);
+        --bot: oklch(78% 0.12 160);
+        --danger: oklch(70% 0.19 25);
+
+        --radius-sm: 8px;
+        --radius-md: 14px;
+        --radius-lg: 22px;
+
+        --space-gutter: clamp(1rem, 2.5vw, 2rem);
+        --space-stack: clamp(1.2rem, 2vw, 1.8rem);
+
+        --text-base: clamp(0.95rem, 0.88rem + 0.25vw, 1.05rem);
+        --text-title: clamp(1.35rem, 1.05rem + 1vw, 1.9rem);
+        --text-eyebrow: 0.72rem;
+
+        --duration-fast: 140ms;
+        --duration-med: 280ms;
+        --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+        font-family:
+          "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        font-size: var(--text-base);
       }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
         margin: 0;
         min-height: 100vh;
-        background: #0b0d10;
-        color: #e6e9ef;
+        background:
+          radial-gradient(
+            120% 80% at 80% -20%,
+            oklch(28% 0.08 250 / 0.4),
+            transparent 60%
+          ),
+          radial-gradient(
+            90% 60% at 0% 110%,
+            oklch(26% 0.08 180 / 0.3),
+            transparent 55%
+          ),
+          var(--bg);
+        color: var(--text);
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        padding: var(--space-gutter);
+        gap: var(--space-stack);
+      }
+
+      header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.25rem 0 1rem;
+        border-bottom: 1px solid var(--border);
+      }
+
+      header .brand {
         display: flex;
         flex-direction: column;
-        align-items: center;
-        gap: 1.5rem;
-        padding: 2rem;
+        gap: 0.2rem;
       }
+
+      header .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-size: var(--text-eyebrow);
+        color: var(--text-muted);
+      }
+
       h1 {
-        font-size: 1.5rem;
-        font-weight: 500;
         margin: 0;
-        letter-spacing: 0.02em;
+        font-size: var(--text-title);
+        font-weight: 500;
+        letter-spacing: -0.01em;
       }
-      .card {
-        background: #14171c;
-        border: 1px solid #232831;
-        border-radius: 12px;
-        padding: 1.5rem 2rem;
-        width: min(640px, 100%);
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
+
+      .status .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--text-muted);
+        box-shadow: 0 0 0 0 oklch(70% 0.17 235 / 0.4);
+        transition: background var(--duration-fast) var(--ease);
+      }
+
+      .status[data-state="connecting"] .dot {
+        background: oklch(80% 0.16 85);
+        animation: pulse 1.2s var(--ease) infinite;
+      }
+
+      .status[data-state="ready"] .dot {
+        background: var(--accent-strong);
+      }
+
+      .status[data-state="speaking"] .dot {
+        background: var(--bot);
+        animation: pulse 0.9s var(--ease) infinite;
+      }
+
+      .status[data-state="error"] .dot {
+        background: var(--danger);
+      }
+
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 currentColor;
+        }
+        70% {
+          box-shadow: 0 0 0 10px transparent;
+        }
+        100% {
+          box-shadow: 0 0 0 0 transparent;
+        }
+      }
+
+      main {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--space-stack);
+        align-content: start;
+      }
+
+      @media (min-width: 780px) {
+        main {
+          grid-template-columns: 320px minmax(0, 1fr);
+        }
+      }
+
+      .panel {
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
         display: flex;
         flex-direction: column;
         gap: 1rem;
       }
-      button {
-        background: #3d7dfc;
-        color: white;
+
+      .panel h2 {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        color: var(--text-muted);
+        text-transform: uppercase;
+      }
+
+      .connect-btn {
+        appearance: none;
         border: 0;
-        border-radius: 8px;
-        padding: 0.75rem 1.25rem;
-        font-size: 1rem;
+        border-radius: var(--radius-md);
+        padding: 0.9rem 1.2rem;
+        font: inherit;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        color: oklch(18% 0.02 260);
+        background: linear-gradient(
+          135deg,
+          var(--accent-strong),
+          var(--accent)
+        );
         cursor: pointer;
-        transition: background 120ms;
+        transition:
+          transform var(--duration-fast) var(--ease),
+          box-shadow var(--duration-fast) var(--ease),
+          filter var(--duration-fast) var(--ease);
+        box-shadow:
+          0 1px 0 0 oklch(100% 0 0 / 0.2) inset,
+          0 12px 30px -18px oklch(70% 0.17 235 / 0.8);
       }
-      button:hover:not(:disabled) {
-        background: #5590ff;
+
+      .connect-btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        filter: brightness(1.04);
       }
-      button:disabled {
-        background: #2a2f38;
+
+      .connect-btn:active:not(:disabled) {
+        transform: translateY(0);
+        filter: brightness(0.97);
+      }
+
+      .connect-btn:focus-visible {
+        outline: 2px solid var(--accent-strong);
+        outline-offset: 3px;
+      }
+
+      .connect-btn:disabled {
         cursor: not-allowed;
+        filter: grayscale(0.5) brightness(0.85);
       }
-      .status {
-        font-size: 0.9rem;
-        color: #8a94a6;
+
+      .connect-btn[data-variant="danger"] {
+        color: oklch(96% 0.005 260);
+        background: linear-gradient(135deg, oklch(55% 0.2 25), oklch(45% 0.2 25));
       }
-      .status span {
-        color: #e6e9ef;
+
+      .mic {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-md);
+        background: oklch(24% 0.015 260);
+        border: 1px solid var(--border);
       }
-      .transcript {
+
+      .mic .ring {
+        position: relative;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: oklch(28% 0.02 260);
+        color: var(--text-muted);
+        transition: background var(--duration-fast) var(--ease);
+      }
+
+      .mic[data-active="true"] .ring {
+        background: oklch(32% 0.15 235);
+        color: var(--accent-strong);
+      }
+
+      .mic[data-active="true"] .ring::after {
+        content: "";
+        position: absolute;
+        inset: -6px;
+        border-radius: 50%;
+        border: 2px solid var(--accent-strong);
+        animation: ripple 1.1s var(--ease) infinite;
+      }
+
+      @keyframes ripple {
+        from {
+          transform: scale(0.8);
+          opacity: 0.8;
+        }
+        to {
+          transform: scale(1.25);
+          opacity: 0;
+        }
+      }
+
+      .mic-label {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
-        max-height: 360px;
-        overflow-y: auto;
-        padding: 0.25rem;
+        gap: 0.15rem;
       }
+
+      .mic-label strong {
+        font-weight: 600;
+      }
+
+      .mic-label span {
+        color: var(--text-muted);
+        font-size: 0.82rem;
+      }
+
+      .settings {
+        display: grid;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
+
+      .settings dt {
+        color: var(--text-muted);
+      }
+
+      .settings dd {
+        margin: 0;
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .settings .row {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .transcript {
+        min-height: 55vh;
+        max-height: 72vh;
+        overflow-y: auto;
+        scroll-behavior: smooth;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding-right: 0.25rem;
+      }
+
+      .transcript:empty::before {
+        content: "The conversation will appear here once you connect.";
+        color: var(--text-muted);
+        font-style: italic;
+        display: block;
+        padding: 2rem 0;
+        text-align: center;
+      }
+
       .bubble {
-        padding: 0.6rem 0.85rem;
-        border-radius: 10px;
-        line-height: 1.45;
-        max-width: 85%;
+        max-width: min(80%, 52ch);
+        padding: 0.7rem 0.95rem;
+        border-radius: var(--radius-md);
+        line-height: 1.5;
         white-space: pre-wrap;
         word-wrap: break-word;
+        border: 1px solid transparent;
+        background: oklch(25% 0.015 260);
+        transition: background var(--duration-med) var(--ease);
       }
-      .bubble.user {
-        background: #1f3358;
-        border: 1px solid #2c4a82;
-        align-self: flex-end;
-      }
-      .bubble.user.interim {
-        opacity: 0.55;
-        border-style: dashed;
-      }
-      .bubble.bot {
-        background: #1a2419;
-        border: 1px solid #2c3d2b;
-        align-self: flex-start;
-      }
-      .bubble.bot.speaking::after {
-        content: " ▌";
-        animation: blink 1s infinite;
-      }
-      @keyframes blink {
-        50% { opacity: 0; }
-      }
-      .bubble .label {
+
+      .bubble .who {
         display: block;
         font-size: 0.7rem;
-        color: #8a94a6;
-        margin-bottom: 0.2rem;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
       }
-      pre {
-        margin: 0;
-        padding: 0.75rem 1rem;
-        background: #0b0d10;
-        border: 1px solid #232831;
-        border-radius: 8px;
-        font-size: 0.75rem;
-        line-height: 1.5;
-        max-height: 180px;
-        overflow: auto;
-        color: #8a94a6;
+
+      .bubble.user {
+        align-self: flex-end;
+        background: oklch(30% 0.08 280);
+        border-color: oklch(40% 0.08 280);
       }
-      details {
-        font-size: 0.85rem;
+
+      .bubble.user .who {
+        color: var(--user);
       }
-      summary {
-        cursor: pointer;
-        color: #8a94a6;
-        padding: 0.25rem 0;
+
+      .bubble.bot {
+        align-self: flex-start;
+        background: oklch(28% 0.05 170);
+        border-color: oklch(36% 0.06 170);
+      }
+
+      .bubble.bot .who {
+        color: var(--bot);
+      }
+
+      .bubble[data-partial="true"] {
+        opacity: 0.75;
+        border-style: dashed;
+      }
+
+      footer {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-align: center;
+        padding: 1rem 0 0.25rem;
+        border-top: 1px solid var(--border);
+      }
+
+      footer code {
+        color: var(--text);
+        background: oklch(24% 0.015 260);
+        padding: 0.1rem 0.4rem;
+        border-radius: 6px;
       }
     </style>
   </head>
   <body>
-    <h1>G1 Voice Agent — Dev Client</h1>
-    <div class="card">
-      <div style="display: flex; gap: 0.75rem; align-items: center">
-        <button id="connect">Connect</button>
-        <button id="disconnect" disabled>Disconnect</button>
-        <button id="clear" style="background: #2a2f38">Clear</button>
+    <header>
+      <div class="brand">
+        <span class="eyebrow">Embodied Chatbots · Dev Client</span>
+        <h1>Voice Agent</h1>
       </div>
-      <div class="status">Connection state: <span id="state">idle</span></div>
-      <div class="transcript" id="transcript"></div>
-      <details>
-        <summary>Debug log</summary>
-        <pre id="log"></pre>
-      </details>
-      <audio id="remote" autoplay></audio>
-    </div>
+      <div class="status" id="status" data-state="idle" role="status" aria-live="polite">
+        <span class="dot" aria-hidden="true"></span>
+        <span class="label">Idle</span>
+      </div>
+    </header>
 
-    <script>
-      const logEl = document.getElementById("log");
-      const transcriptEl = document.getElementById("transcript");
-      const stateEl = document.getElementById("state");
-      const connectBtn = document.getElementById("connect");
-      const disconnectBtn = document.getElementById("disconnect");
-      const clearBtn = document.getElementById("clear");
-      const remoteAudio = document.getElementById("remote");
+    <main>
+      <aside class="panel" aria-label="Controls">
+        <h2>Session</h2>
+        <button
+          id="connect-btn"
+          class="connect-btn"
+          type="button"
+          aria-live="polite"
+        >
+          Connect
+        </button>
 
-      let pc = null;
-      let localStream = null;
-      // Track the current in-progress bubble for each speaker so we can stream
-      // tokens into one element rather than re-creating it per message.
-      let currentUserInterim = null;
-      let currentBotBubble = null;
+        <div class="mic" id="mic-indicator" data-active="false" aria-live="polite">
+          <div class="ring" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+              <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Zm7 9a1 1 0 1 0-2 0 5 5 0 1 1-10 0 1 1 0 1 0-2 0 7 7 0 0 0 6 6.92V21a1 1 0 1 0 2 0v-2.08A7 7 0 0 0 19 12Z" />
+            </svg>
+          </div>
+          <div class="mic-label">
+            <strong>Microphone</strong>
+            <span id="mic-label-state">Inactive</span>
+          </div>
+        </div>
 
-      const log = (msg) => {
-        const time = new Date().toLocaleTimeString();
-        logEl.textContent += `[${time}] ${msg}\n`;
-        logEl.scrollTop = logEl.scrollHeight;
-      };
+        <dl class="settings" aria-label="Session info">
+          <div class="row"><dt>Transport</dt><dd>SmallWebRTC</dd></div>
+          <div class="row"><dt>Signalling</dt><dd><code>/api/offer</code></dd></div>
+          <div class="row"><dt>Bot greet</dt><dd id="greet-state">—</dd></div>
+        </dl>
+      </aside>
 
-      const setState = (s) => {
-        stateEl.textContent = s;
-      };
+      <section class="panel" aria-label="Transcript">
+        <h2>Transcript</h2>
+        <div
+          class="transcript"
+          id="transcript"
+          role="log"
+          aria-live="polite"
+          aria-atomic="false"
+        ></div>
+      </section>
+    </main>
 
-      const makeBubble = (role, text = "") => {
-        const el = document.createElement("div");
-        el.className = `bubble ${role}`;
-        const label = document.createElement("span");
-        label.className = "label";
-        label.textContent = role === "user" ? "You" : "Bot";
-        const body = document.createElement("span");
-        body.className = "body";
-        body.textContent = text;
-        el.append(label, body);
-        transcriptEl.append(el);
-        transcriptEl.scrollTop = transcriptEl.scrollHeight;
-        return el;
-      };
+    <footer>
+      Requires microphone permission. For non-localhost origins, serve over HTTPS.
+    </footer>
 
-      const setBubbleText = (bubble, text) => {
-        bubble.querySelector(".body").textContent = text;
-        transcriptEl.scrollTop = transcriptEl.scrollHeight;
-      };
-
-      const appendBubbleText = (bubble, text) => {
-        const body = bubble.querySelector(".body");
-        body.textContent = (body.textContent || "") + text;
-        transcriptEl.scrollTop = transcriptEl.scrollHeight;
-      };
-
-      const handleRtvi = (msg) => {
-        // RTVI envelope: { id, label: "rtvi-ai", type, data }
-        if (!msg || msg.label !== "rtvi-ai") return;
-
-        switch (msg.type) {
-          case "user-transcription": {
-            const { text, final } = msg.data || {};
-            if (!text) break;
-            if (final) {
-              // Replace interim with final bubble, or create new.
-              if (currentUserInterim) {
-                currentUserInterim.classList.remove("interim");
-                setBubbleText(currentUserInterim, text);
-                currentUserInterim = null;
-              } else {
-                makeBubble("user", text);
-              }
-            } else {
-              if (!currentUserInterim) {
-                currentUserInterim = makeBubble("user", text);
-                currentUserInterim.classList.add("interim");
-              } else {
-                setBubbleText(currentUserInterim, text);
-              }
-            }
-            break;
-          }
-
-          case "bot-llm-started":
-          case "bot-started-speaking": {
-            if (!currentBotBubble) {
-              currentBotBubble = makeBubble("bot", "");
-            }
-            currentBotBubble.classList.add("speaking");
-            break;
-          }
-
-          case "bot-llm-text": {
-            const { text } = msg.data || {};
-            if (!text) break;
-            if (!currentBotBubble) currentBotBubble = makeBubble("bot", "");
-            appendBubbleText(currentBotBubble, text);
-            break;
-          }
-
-          case "bot-llm-stopped":
-          case "bot-stopped-speaking": {
-            if (currentBotBubble) {
-              currentBotBubble.classList.remove("speaking");
-              currentBotBubble = null;
-            }
-            break;
-          }
-
-          case "metrics":
-          case "bot-tts-text":
-          case "user-started-speaking":
-          case "user-stopped-speaking":
-            // Known but intentionally ignored for now.
-            break;
-
-          default:
-            log(`rtvi: ${msg.type}`);
-        }
-      };
-
-      const connect = async () => {
-        connectBtn.disabled = true;
-
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          throw new Error(
-            "mediaDevices unavailable. Open this page via http://localhost:7860 " +
-              "(or HTTPS) — plain-HTTP access from a LAN IP is blocked by the browser."
-          );
-        }
-
-        setState("requesting microphone");
-
-        localStream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
-          },
-        });
-
-        pc = new RTCPeerConnection({
-          iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-        });
-
-        const dc = pc.createDataChannel("chat");
-        dc.onopen = () => log("data channel open");
-        dc.onclose = () => log("data channel closed");
-        dc.onmessage = (event) => {
-          try {
-            const msg = JSON.parse(event.data);
-            handleRtvi(msg);
-          } catch (err) {
-            log(`data channel parse error: ${err.message}`);
-          }
-        };
-
-        localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
-        pc.addTransceiver("audio", { direction: "recvonly" });
-
-        pc.ontrack = (event) => {
-          log("remote track received");
-          remoteAudio.srcObject = event.streams[0];
-        };
-
-        pc.onconnectionstatechange = () => {
-          setState(pc.connectionState);
-          log(`connection state: ${pc.connectionState}`);
-          if (
-            pc.connectionState === "failed" ||
-            pc.connectionState === "disconnected" ||
-            pc.connectionState === "closed"
-          ) {
-            cleanup();
-          }
-        };
-
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-        log("sending offer");
-
-        const resp = await fetch("/api/offer", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            sdp: pc.localDescription.sdp,
-            type: pc.localDescription.type,
-          }),
-        });
-
-        if (!resp.ok) {
-          log(`offer failed: ${resp.status} ${resp.statusText}`);
-          cleanup();
-          return;
-        }
-
-        const answer = await resp.json();
-        await pc.setRemoteDescription(answer);
-        log("answer applied");
-        disconnectBtn.disabled = false;
-      };
-
-      const cleanup = () => {
-        if (pc) {
-          pc.close();
-          pc = null;
-        }
-        if (localStream) {
-          localStream.getTracks().forEach((t) => t.stop());
-          localStream = null;
-        }
-        remoteAudio.srcObject = null;
-        currentUserInterim = null;
-        currentBotBubble = null;
-        connectBtn.disabled = false;
-        disconnectBtn.disabled = true;
-      };
-
-      connectBtn.addEventListener("click", () => {
-        connect().catch((err) => {
-          log(`error: ${err.message}`);
-          cleanup();
-        });
-      });
-      disconnectBtn.addEventListener("click", cleanup);
-      clearBtn.addEventListener("click", () => {
-        transcriptEl.innerHTML = "";
-        logEl.textContent = "";
-        currentUserInterim = null;
-        currentBotBubble = null;
-      });
-    </script>
+    <audio id="bot-audio" autoplay playsinline hidden></audio>
+    <script type="module" src="./app.js"></script>
   </body>
 </html>
