@@ -1,0 +1,26 @@
+[project]
+name = "embodied-chatbots"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12,<4.0"
+dependencies = [
+    "fastapi>=0.136.0",
+    "pipecat-ai[anthropic,cartesia,daily,deepgram,google,local,openai,piper,runner,silero,webrtc,websocket,whisper]>=1.0.0",
+    "piper-tts>=1.4.2",
+    "python-dotenv>=1.2.2",
+    "torch>=2.6.0",
+    "torchaudio>=2.6.0",
+    "torchvision>=0.21.0",
+    "uvicorn>=0.44.0",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu124" }
+torchvision = { index = "pytorch-cu124" }
+torchaudio = { index = "pytorch-cu124" }

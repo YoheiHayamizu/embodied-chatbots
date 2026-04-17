@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>G1 Voice Agent — Dev Client</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #0b0d10;
+        color: #e6e9ef;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 2rem;
+      }
+      h1 {
+        font-size: 1.5rem;
+        font-weight: 500;
+        margin: 0;
+        letter-spacing: 0.02em;
+      }
+      .card {
+        background: #14171c;
+        border: 1px solid #232831;
+        border-radius: 12px;
+        padding: 1.5rem 2rem;
+        width: min(640px, 100%);
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      button {
+        background: #3d7dfc;
+        color: white;
+        border: 0;
+        border-radius: 8px;
+        padding: 0.75rem 1.25rem;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 120ms;
+      }
+      button:hover:not(:disabled) {
+        background: #5590ff;
+      }
+      button:disabled {
+        background: #2a2f38;
+        cursor: not-allowed;
+      }
+      .status {
+        font-size: 0.9rem;
+        color: #8a94a6;
+      }
+      .status span {
+        color: #e6e9ef;
+      }
+      .transcript {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        max-height: 360px;
+        overflow-y: auto;
+        padding: 0.25rem;
+      }
+      .bubble {
+        padding: 0.6rem 0.85rem;
+        border-radius: 10px;
+        line-height: 1.45;
+        max-width: 85%;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+      .bubble.user {
+        background: #1f3358;
+        border: 1px solid #2c4a82;
+        align-self: flex-end;
+      }
+      .bubble.user.interim {
+        opacity: 0.55;
+        border-style: dashed;
+      }
+      .bubble.bot {
+        background: #1a2419;
+        border: 1px solid #2c3d2b;
+        align-self: flex-start;
+      }
+      .bubble.bot.speaking::after {
+        content: " ▌";
+        animation: blink 1s infinite;
+      }
+      @keyframes blink {
+        50% { opacity: 0; }
+      }
+      .bubble .label {
+        display: block;
+        font-size: 0.7rem;
+        color: #8a94a6;
+        margin-bottom: 0.2rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      pre {
+        margin: 0;
+        padding: 0.75rem 1rem;
+        background: #0b0d10;
+        border: 1px solid #232831;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        line-height: 1.5;
+        max-height: 180px;
+        overflow: auto;
+        color: #8a94a6;
+      }
+      details {
+        font-size: 0.85rem;
+      }
+      summary {
+        cursor: pointer;
+        color: #8a94a6;
+        padding: 0.25rem 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>G1 Voice Agent — Dev Client</h1>
+    <div class="card">
+      <div style="display: flex; gap: 0.75rem; align-items: center">
+        <button id="connect">Connect</button>
+        <button id="disconnect" disabled>Disconnect</button>
+        <button id="clear" style="background: #2a2f38">Clear</button>
+      </div>
+      <div class="status">Connection state: <span id="state">idle</span></div>
+      <div class="transcript" id="transcript"></div>
+      <details>
+        <summary>Debug log</summary>
+        <pre id="log"></pre>
+      </details>
+      <audio id="remote" autoplay></audio>
+    </div>
+
+    <script>
+      const logEl = document.getElementById("log");
+      const transcriptEl = document.getElementById("transcript");
+      const stateEl = document.getElementById("state");
+      const connectBtn = document.getElementById("connect");
+      const disconnectBtn = document.getElementById("disconnect");
+      const clearBtn = document.getElementById("clear");
+      const remoteAudio = document.getElementById("remote");
+
+      let pc = null;
+      let localStream = null;
+      // Track the current in-progress bubble for each speaker so we can stream
+      // tokens into one element rather than re-creating it per message.
+      let currentUserInterim = null;
+      let currentBotBubble = null;
+
+      const log = (msg) => {
+        const time = new Date().toLocaleTimeString();
+        logEl.textContent += `[${time}] ${msg}\n`;
+        logEl.scrollTop = logEl.scrollHeight;
+      };
+
+      const setState = (s) => {
+        stateEl.textContent = s;
+      };
+
+      const makeBubble = (role, text = "") => {
+        const el = document.createElement("div");
+        el.className = `bubble ${role}`;
+        const label = document.createElement("span");
+        label.className = "label";
+        label.textContent = role === "user" ? "You" : "Bot";
+        const body = document.createElement("span");
+        body.className = "body";
+        body.textContent = text;
+        el.append(label, body);
+        transcriptEl.append(el);
+        transcriptEl.scrollTop = transcriptEl.scrollHeight;
+        return el;
+      };
+
+      const setBubbleText = (bubble, text) => {
+        bubble.querySelector(".body").textContent = text;
+        transcriptEl.scrollTop = transcriptEl.scrollHeight;
+      };
+
+      const appendBubbleText = (bubble, text) => {
+        const body = bubble.querySelector(".body");
+        body.textContent = (body.textContent || "") + text;
+        transcriptEl.scrollTop = transcriptEl.scrollHeight;
+      };
+
+      const handleRtvi = (msg) => {
+        // RTVI envelope: { id, label: "rtvi-ai", type, data }
+        if (!msg || msg.label !== "rtvi-ai") return;
+
+        switch (msg.type) {
+          case "user-transcription": {
+            const { text, final } = msg.data || {};
+            if (!text) break;
+            if (final) {
+              // Replace interim with final bubble, or create new.
+              if (currentUserInterim) {
+                currentUserInterim.classList.remove("interim");
+                setBubbleText(currentUserInterim, text);
+                currentUserInterim = null;
+              } else {
+                makeBubble("user", text);
+              }
+            } else {
+              if (!currentUserInterim) {
+                currentUserInterim = makeBubble("user", text);
+                currentUserInterim.classList.add("interim");
+              } else {
+                setBubbleText(currentUserInterim, text);
+              }
+            }
+            break;
+          }
+
+          case "bot-llm-started":
+          case "bot-started-speaking": {
+            if (!currentBotBubble) {
+              currentBotBubble = makeBubble("bot", "");
+            }
+            currentBotBubble.classList.add("speaking");
+            break;
+          }
+
+          case "bot-llm-text": {
+            const { text } = msg.data || {};
+            if (!text) break;
+            if (!currentBotBubble) currentBotBubble = makeBubble("bot", "");
+            appendBubbleText(currentBotBubble, text);
+            break;
+          }
+
+          case "bot-llm-stopped":
+          case "bot-stopped-speaking": {
+            if (currentBotBubble) {
+              currentBotBubble.classList.remove("speaking");
+              currentBotBubble = null;
+            }
+            break;
+          }
+
+          case "metrics":
+          case "bot-tts-text":
+          case "user-started-speaking":
+          case "user-stopped-speaking":
+            // Known but intentionally ignored for now.
+            break;
+
+          default:
+            log(`rtvi: ${msg.type}`);
+        }
+      };
+
+      const connect = async () => {
+        connectBtn.disabled = true;
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error(
+            "mediaDevices unavailable. Open this page via http://localhost:7860 " +
+              "(or HTTPS) — plain-HTTP access from a LAN IP is blocked by the browser."
+          );
+        }
+
+        setState("requesting microphone");
+
+        localStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+        });
+
+        pc = new RTCPeerConnection({
+          iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+        });
+
+        const dc = pc.createDataChannel("chat");
+        dc.onopen = () => log("data channel open");
+        dc.onclose = () => log("data channel closed");
+        dc.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            handleRtvi(msg);
+          } catch (err) {
+            log(`data channel parse error: ${err.message}`);
+          }
+        };
+
+        localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+        pc.addTransceiver("audio", { direction: "recvonly" });
+
+        pc.ontrack = (event) => {
+          log("remote track received");
+          remoteAudio.srcObject = event.streams[0];
+        };
+
+        pc.onconnectionstatechange = () => {
+          setState(pc.connectionState);
+          log(`connection state: ${pc.connectionState}`);
+          if (
+            pc.connectionState === "failed" ||
+            pc.connectionState === "disconnected" ||
+            pc.connectionState === "closed"
+          ) {
+            cleanup();
+          }
+        };
+
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        log("sending offer");
+
+        const resp = await fetch("/api/offer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sdp: pc.localDescription.sdp,
+            type: pc.localDescription.type,
+          }),
+        });
+
+        if (!resp.ok) {
+          log(`offer failed: ${resp.status} ${resp.statusText}`);
+          cleanup();
+          return;
+        }
+
+        const answer = await resp.json();
+        await pc.setRemoteDescription(answer);
+        log("answer applied");
+        disconnectBtn.disabled = false;
+      };
+
+      const cleanup = () => {
+        if (pc) {
+          pc.close();
+          pc = null;
+        }
+        if (localStream) {
+          localStream.getTracks().forEach((t) => t.stop());
+          localStream = null;
+        }
+        remoteAudio.srcObject = null;
+        currentUserInterim = null;
+        currentBotBubble = null;
+        connectBtn.disabled = false;
+        disconnectBtn.disabled = true;
+      };
+
+      connectBtn.addEventListener("click", () => {
+        connect().catch((err) => {
+          log(`error: ${err.message}`);
+          cleanup();
+        });
+      });
+      disconnectBtn.addEventListener("click", cleanup);
+      clearBtn.addEventListener("click", () => {
+        transcriptEl.innerHTML = "";
+        logEl.textContent = "";
+        currentUserInterim = null;
+        currentBotBubble = null;
+      });
+    </script>
+  </body>
+</html>

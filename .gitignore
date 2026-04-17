@@ -1,0 +1,68 @@
+# Models
+models/**/
+
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+.vscode
+env/
+*~
+venv
+.idea
+.gradle
+.next
+next-env.d.ts
+local.properties
+*.log
+*.lock
+smart_turn_audio_log
+#*#
+
+# Distribution / Packaging
+.Python
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+share/python-wheels/
+.installed.cfg
+*.egg
+MANIFEST
+.env*
+fly.toml
+
+# Examples
+examples/**/node_modules/
+examples/**/.expo/
+examples/**/dist/
+examples/**/npm-debug.*
+examples/**/*.jks
+examples/**/*.p8
+examples/**/*.p12
+examples/**/*.key
+examples/**/*.mobileprovision
+examples/**/*.orig.*
+examples/**/web-build/
+
+# macOS
+.DS_Store
+
+# Documentation
+docs/api/_build/
+docs/api/api
+
+# uv
+.python-version
