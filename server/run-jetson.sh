@@ -32,4 +32,4 @@ if [[ "$(uname -m)" == "aarch64" ]]; then
   echo "[run-jetson] aarch64 detected; LD_PRELOAD=${LD_PRELOAD}"
 fi
 
-exec uv run python server/app.py
+exec uv run python -m server.app
