@@ -129,6 +129,13 @@ app.mount("/", StaticFiles(directory=str(_STATIC_DIR), html=True), name="static"
 
 
 if __name__ == "__main__":
+    import os
+
     import uvicorn
 
-    uvicorn.run("server.app:app", host="localhost", port=7860, reload=False)
+    uvicorn.run(
+        "server.app:app",
+        host=os.getenv("HOST", "localhost"),
+        port=int(os.getenv("PORT", "7860")),
+        reload=os.getenv("RELOAD", "").lower() in {"1", "true", "yes"},
+    )
