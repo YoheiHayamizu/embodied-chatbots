@@ -70,7 +70,7 @@ def _build_tts() -> PiperTTSService:
     logger.info(f"TTS voice={voice} model_dir={model_dir}")
     return PiperTTSService(
         settings=PiperTTSService.Settings(voice=voice),
-        download_dir=str(model_dir),
+        download_dir=model_dir,
     )
 
 
