@@ -2,10 +2,21 @@
 # Launcher for the SmallWebRTC voice agent server on Jetson (Orin NX,
 # JetPack 5, aarch64).
 #
-# JetPack-built torch wheels ship libc10.so / libtorch.so with symbols the
-# linker fails to resolve when some dependency (e.g. torchaudio) is loaded
-# before torch itself. Pre-loading libc10.so makes those symbols globally
-# visible.
+# Two aarch64-specific issues are worked around via LD_PRELOAD:
+#
+#   1. ctranslate2 ships a bundled libgomp
+#      (ctranslate2.libs/libgomp-<hash>.so.1.0.0). On aarch64 glibc, loading
+#      it lazily fails with "cannot allocate memory in static TLS block"
+#      because earlier-loaded libraries have already consumed the surge
+#      capacity. Preloading libgomp first claims its TLS slot up front.
+#
+#   2. JetPack-built torch wheels ship libc10.so / libtorch.so with symbols
+#      the linker fails to resolve when some dependency (e.g. torchaudio)
+#      is loaded before torch itself. Preloading libc10.so makes those
+#      symbols globally visible.
+#
+# Order matters: libgomp must be listed before libc10.so so it gets its
+# TLS allocation before anything else pulls torch in.
 #
 # Usage:
 #   ./server/run-jetson.sh                  # bind 0.0.0.0:7860
@@ -27,9 +38,35 @@ export PIPER_VOICE="${PIPER_VOICE:-en_US-ryan-high}"
 export PIPER_MODEL_DIR="${PIPER_MODEL_DIR:-$PWD/models/piper}"
 
 if [[ "$(uname -m)" == "aarch64" ]]; then
+  PRELOADS=()
+
+  CT2_GOMP="$(uv run python - <<'PY'
+import glob
+import os
+import ctranslate2
+
+libs_dir = os.path.join(os.path.dirname(ctranslate2.__file__), os.pardir, "ctranslate2.libs")
+libs_dir = os.path.abspath(libs_dir)
+matches = sorted(glob.glob(os.path.join(libs_dir, "libgomp-*.so*")))
+print(matches[0] if matches else "")
+PY
+)"
+  if [[ -n "${CT2_GOMP}" && -f "${CT2_GOMP}" ]]; then
+    PRELOADS+=("${CT2_GOMP}")
+  else
+    echo "[run-jetson] warning: ctranslate2 bundled libgomp not found; STT may fail to load" >&2
+  fi
+
   TORCH_LIB="$(uv run python -c 'import torch, os; print(os.path.join(os.path.dirname(torch.__file__), "lib"))')"
-  export LD_PRELOAD="${LD_PRELOAD:-}${LD_PRELOAD:+:}${TORCH_LIB}/libc10.so"
-  echo "[run-jetson] aarch64 detected; LD_PRELOAD=${LD_PRELOAD}"
+  if [[ -f "${TORCH_LIB}/libc10.so" ]]; then
+    PRELOADS+=("${TORCH_LIB}/libc10.so")
+  fi
+
+  if (( ${#PRELOADS[@]} > 0 )); then
+    JOINED="$(IFS=:; echo "${PRELOADS[*]}")"
+    export LD_PRELOAD="${LD_PRELOAD:-}${LD_PRELOAD:+:}${JOINED}"
+  fi
+  echo "[run-jetson] aarch64 detected; LD_PRELOAD=${LD_PRELOAD:-}"
 fi
 
 exec uv run python -m server.app
