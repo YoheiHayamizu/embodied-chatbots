@@ -59,6 +59,10 @@ export LLM_MODEL="${LLM_MODEL:-claude-haiku-4-5}"
 # budget. If STT finishes after this timeout, the transcript is silently
 # dropped and the bot appears unresponsive.
 export USER_TURN_STOP_TIMEOUT="${USER_TURN_STOP_TIMEOUT:-30}"
+# Allow ~1s of natural breath pause between sentences before the bot takes
+# the turn back. (VAD silence + extra speech_timeout = total wait budget.)
+export VAD_STOP_SECS="${VAD_STOP_SECS:-1.0}"
+export USER_SPEECH_TIMEOUT="${USER_SPEECH_TIMEOUT:-1.0}"
 
 if [[ "$(uname -m)" == "aarch64" ]]; then
   PRELOADS=()
