@@ -1,0 +1,82 @@
+{
+    "scenario_id": "scenario-0017",
+    "property": {
+        "id": "home-family-02",
+        "rooms": {
+            "entrance": {
+                "storage": "yes",
+                "size": "medium"
+            },
+            "livingroom": {
+                "flooring": "tile",
+                "size": "medium",
+                "view": "yard"
+            },
+            "bedroom": {
+                "bedtype": "queen",
+                "size": "medium",
+                "view": "street"
+            },
+            "kitchen": {
+                "kitchentype": "island",
+                "size": "large",
+                "view": "livingroom"
+            }
+        }
+    },
+    "persona": {
+        "id": "46240931-4b94-4073-8601-e5a0b2118e6d",
+        "persona": {
+            "age": "I am 32 years old, passionate about fitness and long-distance running.",
+            "occupation": "I work as a gym instructor and part-time sportswear product reviewer.",
+            "family": "I live with my dog, who often joins me on trail runs.",
+            "interests": "I enjoy running, fitness blogging, and preparing healthy experimental meals.",
+            "lifestyle": "I maintain an active lifestyle focused on endurance, wellness, and fun.",
+            "extraversion": 3,
+            "agreeableness": 3,
+            "conscientiousness": 3
+        },
+        "goal": {
+            "inform": {},
+            "request": {
+                "kitchen": {
+                    "size": ""
+                },
+                "livingroom": {
+                    "view": ""
+                }
+            }
+        }
+    },
+    "goals": {
+        "agent": {
+            "description": "You are a real estate agent. You have to provide a potential buyer with the following information and answer any questions. Try to build a good relationship with the buyer and make them interested in the property.<br>The features to inform are: <br><ul>\n  <li><span class='emphasis'> the entrance has storage </span></li>\n  <li><span class='emphasis'> the size of the livingroom is medium </span></li>\n</ul>.",
+            "inform": {
+                "entrance": {
+                    "storage": "yes"
+                },
+                "livingroom": {
+                    "size": "medium"
+                }
+            },
+            "request": {}
+        },
+        "user": {
+            "description": "You are a potential buyer and are interested in buying a property.<br>Your persona:<ul>\n  <li>I am 32 years old, passionate about fitness and long-distance running.</li>\n  <li>I work as a gym instructor and part-time sportswear product reviewer.</li>\n  <li>I live with my dog, who often joins me on trail runs.</li>\n  <li>I enjoy running, fitness blogging, and preparing healthy experimental meals.</li>\n  <li>I maintain an active lifestyle focused on endurance, wellness, and fun.</li>\n  <li>3</li>\n  <li>3</li>\n  <li>3</li>\n</ul><br><br>You have to ask the agent for the following information:<br><ul>\n</ul><br>Also inform the buyer's personal information to the agent to build a good relationship.",
+            "inform": {},
+            "request": {
+                "kitchen": {
+                    "size": ""
+                },
+                "livingroom": {
+                    "view": ""
+                }
+            }
+        }
+    },
+    "domains": [
+        "entrance",
+        "kitchen",
+        "livingroom"
+    ]
+}

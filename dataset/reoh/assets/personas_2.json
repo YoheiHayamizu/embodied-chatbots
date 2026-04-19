@@ -1,0 +1,44 @@
+[
+    {
+        "id": "6bc013fa-6a5b-429e-baf9-5b3dbf519601",
+        "persona": {
+            "age": "I am 41 years old and enjoy nurturing both career and home life.",
+            "occupation": "I work as a project manager in a renewable energy company.",
+            "family": "I live with my partner, two children, and our affectionate golden retriever.",
+            "interests": "I enjoy gardening, DIY projects, and watching nature documentaries together.",
+            "lifestyle": "I keep a family-centered lifestyle filled with structure and outdoor time."
+        },
+        "goal": {
+            "inform": {},
+            "request": {
+                "livingroom": {
+                    "view": ""
+                },
+                "entrance": {
+                    "storage": ""
+                }
+            }
+        }
+    },
+    {
+        "id": "7c7ef890-1186-4c1f-91c5-06f8b045c429",
+        "persona": {
+            "age": "I am 36 years old and building a career while raising a young family.",
+            "occupation": "I work as a chef managing a small but popular Italian restaurant.",
+            "family": "I live with my spouse, our daughter, and a playful black cat.",
+            "interests": "I enjoy cooking with my family, collecting knives, and teaching recipes.",
+            "lifestyle": "I lead an energetic lifestyle filled with flavor, family, and late nights."
+        },
+        "goal": {
+            "inform": {},
+            "request": {
+                "kitchen": {
+                    "kitchentype": ""
+                },
+                "entrance": {
+                    "storage": ""
+                }
+            }
+        }
+    }
+]

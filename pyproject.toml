@@ -24,3 +24,8 @@ explicit = true
 torch = [{ index = "pytorch-cu124", marker = "platform_machine == 'x86_64'" }]
 torchvision = [{ index = "pytorch-cu124", marker = "platform_machine == 'x86_64'" }]
 torchaudio = [{ index = "pytorch-cu124", marker = "platform_machine == 'x86_64'" }]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]

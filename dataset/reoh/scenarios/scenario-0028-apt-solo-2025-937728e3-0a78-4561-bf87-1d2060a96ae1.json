@@ -1,0 +1,86 @@
+{
+    "scenario_id": "scenario-0028",
+    "property": {
+        "id": "apt-solo-2025",
+        "rooms": {
+            "entrance": {
+                "storage": "no",
+                "size": "small"
+            },
+            "livingroom": {
+                "flooring": "laminate",
+                "size": "small",
+                "view": "city"
+            },
+            "bedroom": {
+                "bedtype": "full",
+                "size": "small",
+                "view": "garden"
+            },
+            "kitchen": {
+                "kitchentype": "galley",
+                "size": "small",
+                "view": "yard"
+            }
+        }
+    },
+    "persona": {
+        "id": "937728e3-0a78-4561-bf87-1d2060a96ae1",
+        "persona": {
+            "age": "I am 40 years old and balancing creative work with parenting joys.",
+            "occupation": "I work as a graphic designer for a children’s educational media company.",
+            "family": "I live with my partner, twin daughters, and a tank of tropical fish.",
+            "interests": "I enjoy digital drawing, bedtime storytelling, and indoor herb gardening.",
+            "lifestyle": "I live a colorful, family-oriented life full of small creative routines.",
+            "extraversion": 3,
+            "agreeableness": 3,
+            "conscientiousness": 3
+        },
+        "goal": {
+            "inform": {},
+            "request": {
+                "kitchen": {
+                    "kitchentype": ""
+                },
+                "livingroom": {
+                    "view": ""
+                }
+            }
+        }
+    },
+    "goals": {
+        "agent": {
+            "description": "You are a real estate agent. You have to provide a potential buyer with the following information and answer any questions. Try to build a good relationship with the buyer and make them interested in the property.<br>The features to inform are: <br><ul>\n  <li><span class='emphasis'> the bedtype of the bedroom is full </span></li>\n  <li><span class='emphasis'> the view of the kitchen is yard </span></li>\n  <li><span class='emphasis'> the flooring of the livingroom is laminate </span></li>\n</ul>.",
+            "inform": {
+                "bedroom": {
+                    "bedtype": "full"
+                },
+                "kitchen": {
+                    "view": "yard"
+                },
+                "livingroom": {
+                    "flooring": "laminate"
+                }
+            },
+            "request": {}
+        },
+        "user": {
+            "description": "You are a potential buyer and are interested in buying a property.<br>Your persona:<ul>\n  <li>I am 40 years old and balancing creative work with parenting joys.</li>\n  <li>I work as a graphic designer for a children’s educational media company.</li>\n  <li>I live with my partner, twin daughters, and a tank of tropical fish.</li>\n  <li>I enjoy digital drawing, bedtime storytelling, and indoor herb gardening.</li>\n  <li>I live a colorful, family-oriented life full of small creative routines.</li>\n  <li>3</li>\n  <li>3</li>\n  <li>3</li>\n</ul><br><br>You have to ask the agent for the following information:<br><ul>\n</ul><br>Also inform the buyer's personal information to the agent to build a good relationship.",
+            "inform": {},
+            "request": {
+                "kitchen": {
+                    "kitchentype": ""
+                },
+                "livingroom": {
+                    "view": ""
+                }
+            }
+        }
+    },
+    "domains": [
+        "entrance",
+        "kitchen",
+        "bedroom",
+        "livingroom"
+    ]
+}

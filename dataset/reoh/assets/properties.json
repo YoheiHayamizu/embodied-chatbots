@@ -1,0 +1,150 @@
+{
+    "metadata": {
+        "description": "A collection of properties with various room configurations, including entrance, living room, bedroom, and kitchen details. This file includes three properties with different room types and features.",
+        "version": "1.0",
+        "last_updated": "2025-06-06",
+        "entrance": {
+            "storage": {
+                "Yes": "Includes built-in storage for coats, shoes, and other items, keeping the area organized.",
+                "No": "No dedicated storage in the entrance; items must be stored elsewhere in the home."
+            },
+            "size": {
+                "Small": "Approximately 20–40 sq ft, typical in compact homes or apartments.",
+                "Medium": "Approximately 40–80 sq ft, common in standard single-family homes.",
+                "Large": "Over 80 sq ft, often found in luxury homes and may include seating or decor."
+            }
+        },
+        "livingroom": {
+            "flooring": {
+                "Hardwood": "Wood flooring that provides warmth and a classic, upscale look.",
+                "Stone": "Durable and cool stone flooring, giving a modern and elegant feel.",
+                "Laminate": "Synthetic flooring with a wood-like appearance, easy to maintain.",
+                "Carpet": "Soft and cozy flooring, good for insulation and comfort.",
+                "Tile": "Water-resistant ceramic or porcelain tiles, easy to clean and durable."
+            },
+            "view": {
+                "Yard": "Overlooks the backyard, letting in natural light and providing openness.",
+                "Lake": "Scenic view of a lake, ideal for relaxation and nature lovers.",
+                "City": "Urban views of the surrounding city area, often with good lighting.",
+                "Forest": "Looks out onto trees or wooded areas, offering a serene environment."
+            },
+            "size": {
+                "Small": "Around 130 sq ft, suitable for 2–4 people with compact seating.",
+                "Medium": "Around 216 sq ft, accommodates 6–10 people comfortably.",
+                "Large": "300 sq ft or more, spacious enough for large furniture and gatherings."
+            }
+        },
+        "bedroom": {
+            "bedtype": {
+                "Twin": "A small bedroom that fits a single bed, typically for one person.",
+                "Full": "Fits a full-size bed, suitable for one adult or a parent-child pair.",
+                "Queen": "Accommodates a queen-size bed, ideal for two adults.",
+                "King": "Spacious enough for a king-size bed, often used in master bedrooms."
+            },
+            "view": {
+                "Street": "Faces the street, allowing a view of passing vehicles and pedestrians.",
+                "Garden": "Overlooks a landscaped garden or courtyard, offering a peaceful atmosphere.",
+                "River": "Provides a view of a nearby river, creating a calming environment.",
+                "City": "Offers a view of the cityscape, often with skyline or night lights."
+            },
+            "size": {
+                "Small": "90–120 sq ft, fits a bed and small furniture, ideal for compact spaces.",
+                "Medium": "120–160 sq ft, supports additional furnishings like dressers or desks.",
+                "Large": "160–300 sq ft or more, suitable for master bedrooms with seating areas."
+            }
+        },
+        "kitchen": {
+            "kitchentype": {
+                "Galley": "A narrow, two-wall kitchen layout ideal for efficient cooking.",
+                "Island": "Features a central island, combining cooking and dining space.",
+                "Peninsula": "Includes a counter extension like an island, attached on one side.",
+                "L-shaped": "Appliances and counters are arranged in an L, efficient and spacious.",
+                "U-shaped": "Surrounded on three sides by counters, maximizing workspace and storage."
+            },
+            "view": {
+                "Livingroom": "Open to the living room, enabling interaction while cooking.",
+                "Yard": "Faces the backyard, with natural light and pleasant views.",
+                "Street": "Looks out onto the street, allowing views of the neighborhood."
+            },
+            "size": {
+                "Small": "Around 100 sq ft, typically found in apartments or smaller homes.",
+                "Medium": "150–200 sq ft, provides space for appliances and movement.",
+                "Large": "250 sq ft or more, often with an island and room for multiple people."
+            }
+        }
+    },
+    "properties": [
+        {
+            "id": "home-family-01",
+            "rooms": {
+                "entrance": {
+                    "storage": "yes",
+                    "size": "medium"
+                },
+                "livingroom": {
+                    "flooring": "hardwood",
+                    "size": "medium",
+                    "view": "yard"
+                },
+                "bedroom": {
+                    "bedtype": "queen",
+                    "size": "medium",
+                    "view": "street"
+                },
+                "kitchen": {
+                    "kitchentype": "l-shaped",
+                    "size": "medium",
+                    "view": "livingroom"
+                }
+            }
+        },
+        {
+            "id": "home-family-02",
+            "rooms": {
+                "entrance": {
+                    "storage": "yes",
+                    "size": "medium"
+                },
+                "livingroom": {
+                    "flooring": "tile",
+                    "size": "medium",
+                    "view": "yard"
+                },
+                "bedroom": {
+                    "bedtype": "queen",
+                    "size": "medium",
+                    "view": "street"
+                },
+                "kitchen": {
+                    "kitchentype": "island",
+                    "size": "large",
+                    "view": "livingroom"
+                }
+            }
+        },
+        {
+            "id": "apt-solo-2025",
+            "rooms": {
+                "entrance": {
+                    "storage": "no",
+                    "size": "small"
+                },
+                "livingroom": {
+                    "flooring": "laminate",
+                    "size": "small",
+                    "view": "city"
+                },
+                "bedroom": {
+                    "bedtype": "full",
+                    "size": "small",
+                    "view": "garden"
+                },
+                "kitchen": {
+                    "kitchentype": "galley",
+                    "size": "small",
+                    "view": "yard"
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,244 @@
+{
+  "domains": {
+    "entrance": {
+      "description": "find good features of the entrance",
+      "slots": {
+        "storage": {
+          "description": "whether the entrance has storage",
+          "is_categorical": true,
+          "possible_values": [
+            "no",
+            "yes"
+          ]
+        },
+        "size": {
+          "description": "size of the entrance",
+          "is_categorical": true,
+          "possible_values": [
+            "small",
+            "medium",
+            "large"
+          ]
+        }
+      }
+    },
+    "livingroom": {
+      "description": "find good features of the livingroom",
+      "slots": {
+        "flooring": {
+          "description": "what is the flooring type of the livingroom",
+          "is_categorical": true,
+          "possible_values": [
+            "hardwood",
+            "carpet",
+            "tile",
+            "stone"
+          ]
+        },
+        "view": {
+          "description": "view from the livingroom",
+          "is_categorical": true,
+          "possible_values": [
+            "river",
+            "lake",
+            "livingroom",
+            "yard",
+            "street",
+            "garden",
+            "diningroom",
+            "nature"
+          ]
+        },
+        "size": {
+          "description": "size of the livingroom",
+          "is_categorical": true,
+          "possible_values": [
+            "small",
+            "medium",
+            "large"
+          ]
+        }
+      }
+    },
+    "bedroom": {
+      "description": "find good features of the bedroom",
+      "slots": {
+        "bedtype": {
+          "description": "what is the type of the bed of the bedroom",
+          "is_categorical": true,
+          "possible_values": [
+            "twin",
+            "full",
+            "queen",
+            "king"
+          ]
+        },
+        "view": {
+          "description": "view from the bedroom",
+          "is_categorical": true,
+          "possible_values": [
+            "river",
+            "lake",
+            "livingroom",
+            "yard",
+            "street",
+            "garden",
+            "diningroom",
+            "nature"
+          ]
+        },
+        "size": {
+          "description": "size of the bedroom",
+          "is_categorical": true,
+          "possible_values": [
+            "small",
+            "medium",
+            "large"
+          ]
+        }
+      }
+    },
+    "kitchen": {
+      "description": "find kitchen features of the house preferable",
+      "slots": {
+        "kitchentype": {
+          "description": "what is the type of the bed of the kitchen",
+          "is_categorical": true,
+          "possible_values": [
+            "galley",
+            "lshaped",
+            "ushaped",
+            "island"
+          ]
+        },
+        "view": {
+          "description": "view from the kitchen",
+          "is_categorical": true,
+          "possible_values": [
+            "river",
+            "lake",
+            "livingroom",
+            "yard",
+            "street",
+            "garden",
+            "diningroom",
+            "nature"
+          ]
+        },
+        "size": {
+          "description": "size of the kitchen",
+          "is_categorical": true,
+          "possible_values": [
+            "small",
+            "medium",
+            "large"
+          ]
+        }
+      }
+    },
+    "general": {
+      "description": "general domain without slots",
+      "slots": {}
+    }
+  },
+  "intents": {
+    "greeting": {
+      "description": "An initial greeting to establish rapport (e.g., 'Hello! Welcome to the open house.', 'Hello! I'm looking forward to it.')."
+    },
+    "acknowledgement": {
+      "description": "A short response indicating that the speaker has heard and understood the previous statement (e.g., 'Got it!', 'I see')."
+    },
+    "gratitude-expression": {
+      "description": "Expressing gratitude and its response at the end or during the interaction (e.g., 'Thank you for taking the time to tour this home!', 'Thank you for touring me today.')."
+    },
+    "positive-expression": {
+      "description": "A positive statement or feedback (e.g., 'This room looks great!', 'I love the view', 'That sounds nice.')."
+    },
+    "negative-expression": {
+      "description": "A negative statement or feedback (e.g., 'I'm not sure about this layout', 'This room feels small', 'That's a pity.)."
+    },
+    "neutral-expression": {
+      "description": "A neutral statement or feedback that does not express a strong opinion (e.g., 'Interesting', 'That's good to know')."
+    },
+    "inform": {
+      "description": "Providing information about the property, features, layout, or personal information (e.g., 'This room has a walk-in closet and a private bathroom', 'I like cooking so this feature is great.')."
+    },
+    "request": {
+      "description": "Asking for information or feedback (e.g., 'What do you think of this room?', 'Do you have any specific preferences?', 'What do you enjoy during a break?')."
+    },
+    "guidance": {
+      "description": "Providing directions or instructions for the user to follow (e.g., 'Please follow me to the next room', 'Let's head to the living room')."
+    },
+    "closing": {
+      "description": "A statement signaling the end of the conversation or tour (e.g., 'That concludes our tour. Let me know if you have any questions!', 'I think I could get all the information I want to know.')."
+    },
+    "done": {
+      "description": "terminate the tour ([exit])"
+    },
+    "navigation-command": {
+      "description": "navigate to a point ([room name])"
+    }
+  },
+  "state": {
+    "entrance": {
+      "storage": "",
+      "size": ""
+    },
+    "livingroom": {
+      "flooring": "",
+      "size": "",
+      "view": ""
+    },
+    "bedroom": {
+      "bedtype": "",
+      "size": "",
+      "view": ""
+    },
+    "kitchen": {
+      "kitchentype": "",
+      "size": "",
+      "view": ""
+    }
+  },
+  "dialogue_acts": {
+    "categorical": [
+      "{'user': True, 'system': True, 'intent': 'inform', 'domain': 'entrance', 'slot': 'storage'}",
+      "{'user': True, 'system': True, 'intent': 'inform', 'domain': 'entrance', 'slot': 'size'}",
+      "{'user': True, 'system': True, 'intent': 'inform', 'domain': 'livingroom', 'slot': 'flooring'}",
+      "{'user': True, 'system': True, 'intent': 'inform', 'domain': 'livingroom', 'slot': 'view'}",
+      "{'user': True, 'system': True, 'intent': 'inform', 'domain': 'livingroom', 'slot': 'size'}",
+      "{'user': True, 'system': True, 'intent': 'inform', 'domain': 'bedroom', 'slot': 'view'}",
+      "{'user': True, 'system': True, 'intent': 'inform', 'domain': 'bedroom', 'slot': 'size'}",
+      "{'user': True, 'system': True, 'intent': 'inform', 'domain': 'bedroom', 'slot': 'type'}",
+      "{'user': True, 'system': True, 'intent': 'inform', 'domain': 'kitchen', 'slot': 'type'}",
+      "{'user': True, 'system': True, 'intent': 'inform', 'domain': 'kitchen', 'slot': 'view'}",
+      "{'user': True, 'system': True, 'intent': 'inform', 'domain': 'kitchen', 'slot': 'size'}",
+      "{'user': True, 'system': True, 'intent': 'request', 'domain': 'entrance', 'slot': 'storage'}",
+      "{'user': True, 'system': True, 'intent': 'request', 'domain': 'entrance', 'slot': 'size'}",
+      "{'user': True, 'system': True, 'intent': 'request', 'domain': 'livingroom', 'slot': 'flooring'}",
+      "{'user': True, 'system': True, 'intent': 'request', 'domain': 'livingroom', 'slot': 'view'}",
+      "{'user': True, 'system': True, 'intent': 'request', 'domain': 'livingroom', 'slot': 'size'}",
+      "{'user': True, 'system': True, 'intent': 'request', 'domain': 'bedroom', 'slot': 'type'}",
+      "{'user': True, 'system': True, 'intent': 'request', 'domain': 'bedroom', 'slot': 'view'}",
+      "{'user': True, 'system': True, 'intent': 'request', 'domain': 'bedroom', 'slot': 'size'}",
+      "{'user': True, 'system': True, 'intent': 'request', 'domain': 'kitchen', 'slot': 'type'}",
+      "{'user': True, 'system': True, 'intent': 'request', 'domain': 'kitchen', 'slot': 'view'}",
+      "{'user': True, 'system': True, 'intent': 'request', 'domain': 'kitchen', 'slot': 'size'}",
+      "{'user': False, 'system': True, 'intent': 'guidance', 'domain': 'entrance', 'slot': ''}",
+      "{'user': False, 'system': True, 'intent': 'guidance', 'domain': 'livingroom', 'slot': ''}",
+      "{'user': False, 'system': True, 'intent': 'guidance', 'domain': 'bedroom', 'slot': ''}",
+      "{'user': False, 'system': True, 'intent': 'guidance', 'domain': 'kitchen', 'slot': ''}"
+    ],
+    "non-categorical": [],
+    "binary": [
+      "{'user': True, 'system': False, 'intent': 'positive-expression', 'domain': 'general', 'slot': ''}",
+      "{'user': True, 'system': False, 'intent': 'negative-expression', 'domain': 'general', 'slot': ''}",
+      "{'user': True, 'system': False, 'intent': 'neutral-expression', 'domain': 'general', 'slot': ''}",
+      "{'user': True, 'system': True, 'intent': 'navigation-command', 'domain': 'general', 'slot': ''}",
+      "{'user': True, 'system': True, 'intent': 'greeting', 'domain': 'general', 'slot': ''}",
+      "{'user': True, 'system': True, 'intent': 'acknowledgement', 'domain': 'general', 'slot': ''}",
+      "{'user': True, 'system': True, 'intent': 'gratitude-expression', 'domain': 'general', 'slot': ''}",
+      "{'user': True, 'system': True, 'intent': 'closing', 'domain': 'general', 'slot': ''}"
+    ]
+  }
+}

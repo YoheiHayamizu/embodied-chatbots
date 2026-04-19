@@ -1,0 +1,81 @@
+{
+    "scenario_id": "scenario-0021",
+    "property": {
+        "id": "apt-solo-2025",
+        "rooms": {
+            "entrance": {
+                "storage": "no",
+                "size": "small"
+            },
+            "livingroom": {
+                "flooring": "laminate",
+                "size": "small",
+                "view": "city"
+            },
+            "bedroom": {
+                "bedtype": "full",
+                "size": "small",
+                "view": "garden"
+            },
+            "kitchen": {
+                "kitchentype": "galley",
+                "size": "small",
+                "view": "yard"
+            }
+        }
+    },
+    "persona": {
+        "id": "f4b2d2a9-6f79-4c35-b9d6-85f7f9d67cf5",
+        "persona": {
+            "age": "I am 34 years old, currently growing my family and professional life together.",
+            "occupation": "I work as a software developer building educational apps for children.",
+            "family": "I live with my spouse and our toddler who loves dinosaurs and crayons.",
+            "interests": "I enjoy coding, parenting podcasts, and weekend walks in the park.",
+            "lifestyle": "I balance productivity and family bonding through a structured daily routine.",
+            "extraversion": 3,
+            "agreeableness": 3,
+            "conscientiousness": 3
+        },
+        "goal": {
+            "inform": {},
+            "request": {
+                "livingroom": {
+                    "size": ""
+                },
+                "entrance": {
+                    "storage": ""
+                }
+            }
+        }
+    },
+    "goals": {
+        "agent": {
+            "description": "You are a real estate agent. You have to provide a potential buyer with the following information and answer any questions. Try to build a good relationship with the buyer and make them interested in the property.<br>The features to inform are: <br><ul>\n  <li><span class='emphasis'> the entrance has no storage </span></li>\n  <li><span class='emphasis'> the flooring of the livingroom is laminate </span></li>\n</ul>.",
+            "inform": {
+                "entrance": {
+                    "storage": "no"
+                },
+                "livingroom": {
+                    "flooring": "laminate"
+                }
+            },
+            "request": {}
+        },
+        "user": {
+            "description": "You are a potential buyer and are interested in buying a property.<br>Your persona:<ul>\n  <li>I am 34 years old, currently growing my family and professional life together.</li>\n  <li>I work as a software developer building educational apps for children.</li>\n  <li>I live with my spouse and our toddler who loves dinosaurs and crayons.</li>\n  <li>I enjoy coding, parenting podcasts, and weekend walks in the park.</li>\n  <li>I balance productivity and family bonding through a structured daily routine.</li>\n  <li>3</li>\n  <li>3</li>\n  <li>3</li>\n</ul><br><br>You have to ask the agent for the following information:<br><ul>\n</ul><br>Also inform the buyer's personal information to the agent to build a good relationship.",
+            "inform": {},
+            "request": {
+                "livingroom": {
+                    "size": ""
+                },
+                "entrance": {
+                    "storage": ""
+                }
+            }
+        }
+    },
+    "domains": [
+        "entrance",
+        "livingroom"
+    ]
+}

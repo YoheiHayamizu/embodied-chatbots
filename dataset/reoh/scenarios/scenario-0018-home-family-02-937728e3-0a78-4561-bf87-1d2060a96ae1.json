@@ -1,0 +1,82 @@
+{
+    "scenario_id": "scenario-0018",
+    "property": {
+        "id": "home-family-02",
+        "rooms": {
+            "entrance": {
+                "storage": "yes",
+                "size": "medium"
+            },
+            "livingroom": {
+                "flooring": "tile",
+                "size": "medium",
+                "view": "yard"
+            },
+            "bedroom": {
+                "bedtype": "queen",
+                "size": "medium",
+                "view": "street"
+            },
+            "kitchen": {
+                "kitchentype": "island",
+                "size": "large",
+                "view": "livingroom"
+            }
+        }
+    },
+    "persona": {
+        "id": "937728e3-0a78-4561-bf87-1d2060a96ae1",
+        "persona": {
+            "age": "I am 40 years old and balancing creative work with parenting joys.",
+            "occupation": "I work as a graphic designer for a children’s educational media company.",
+            "family": "I live with my partner, twin daughters, and a tank of tropical fish.",
+            "interests": "I enjoy digital drawing, bedtime storytelling, and indoor herb gardening.",
+            "lifestyle": "I live a colorful, family-oriented life full of small creative routines.",
+            "extraversion": 3,
+            "agreeableness": 3,
+            "conscientiousness": 3
+        },
+        "goal": {
+            "inform": {},
+            "request": {
+                "kitchen": {
+                    "kitchentype": ""
+                },
+                "livingroom": {
+                    "view": ""
+                }
+            }
+        }
+    },
+    "goals": {
+        "agent": {
+            "description": "You are a real estate agent. You have to provide a potential buyer with the following information and answer any questions. Try to build a good relationship with the buyer and make them interested in the property.<br>The features to inform are: <br><ul>\n  <li><span class='emphasis'> the view of the livingroom is yard </span></li>\n  <li><span class='emphasis'> the kitchentype of the kitchen is island </span></li>\n</ul>.",
+            "inform": {
+                "livingroom": {
+                    "view": "yard"
+                },
+                "kitchen": {
+                    "kitchentype": "island"
+                }
+            },
+            "request": {}
+        },
+        "user": {
+            "description": "You are a potential buyer and are interested in buying a property.<br>Your persona:<ul>\n  <li>I am 40 years old and balancing creative work with parenting joys.</li>\n  <li>I work as a graphic designer for a children’s educational media company.</li>\n  <li>I live with my partner, twin daughters, and a tank of tropical fish.</li>\n  <li>I enjoy digital drawing, bedtime storytelling, and indoor herb gardening.</li>\n  <li>I live a colorful, family-oriented life full of small creative routines.</li>\n  <li>3</li>\n  <li>3</li>\n  <li>3</li>\n</ul><br><br>You have to ask the agent for the following information:<br><ul>\n</ul><br>Also inform the buyer's personal information to the agent to build a good relationship.",
+            "inform": {},
+            "request": {
+                "kitchen": {
+                    "kitchentype": ""
+                },
+                "livingroom": {
+                    "view": ""
+                }
+            }
+        }
+    },
+    "domains": [
+        "entrance",
+        "kitchen",
+        "livingroom"
+    ]
+}

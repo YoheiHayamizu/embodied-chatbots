@@ -1,0 +1,242 @@
+[
+    {
+        "id": "ae75f121-9b62-45a1-950e-8f03a589fd8d",
+        "persona": {
+            "age": "I am 28 years old and starting to explore life independently and creatively.",
+            "occupation": "I work as a freelance illustrator creating visuals for books and media.",
+            "family": "I live alone and keep a rabbit as a quiet companion.",
+            "interests": "I enjoy drawing, cafe hopping, and exploring modern art exhibitions weekly.",
+            "lifestyle": "I maintain a quiet lifestyle centered around routine, creativity, and comfort.",
+            "extraversion": 3,
+            "agreeableness": 3,
+            "conscientiousness": 3
+        },
+        "goal": {
+            "inform": {},
+            "request": {
+                "livingroom": {
+                    "view": ""
+                },
+                "kitchen": {
+                    "kitchentype": ""
+                }
+            }
+        }
+    },
+    {
+        "id": "f4b2d2a9-6f79-4c35-b9d6-85f7f9d67cf5",
+        "persona": {
+            "age": "I am 34 years old, currently growing my family and professional life together.",
+            "occupation": "I work as a software developer building educational apps for children.",
+            "family": "I live with my spouse and our toddler who loves dinosaurs and crayons.",
+            "interests": "I enjoy coding, parenting podcasts, and weekend walks in the park.",
+            "lifestyle": "I balance productivity and family bonding through a structured daily routine.",
+            "extraversion": 3,
+            "agreeableness": 3,
+            "conscientiousness": 3
+        },
+        "goal": {
+            "inform": {},
+            "request": {
+                "livingroom": {
+                    "size": ""
+                },
+                "entrance": {
+                    "storage": ""
+                }
+            }
+        }
+    },
+    {
+        "id": "39fc6223-6fe5-44d7-a470-8aa71b5a00ea",
+        "persona": {
+            "age": "I am 30 years old, focused on professional growth and self-discovery.",
+            "occupation": "I work as a business consultant helping startups grow and scale effectively.",
+            "family": "I live alone but frequently travel to visit my nieces and nephews.",
+            "interests": "I enjoy podcasts, urban hiking, and writing career blogs on weekends.",
+            "lifestyle": "I follow a semi-nomadic lifestyle balancing client visits and remote work.",
+            "extraversion": 3,
+            "agreeableness": 3,
+            "conscientiousness": 3
+        },
+        "goal": {
+            "inform": {},
+            "request": {
+                "livingroom": {
+                    "view": ""
+                },
+                "kitchen": {
+                    "kitchentype": ""
+                }
+            }
+        }
+    },
+    {
+        "id": "6bc013fa-6a5b-429e-baf9-5b3dbf519601",
+        "persona": {
+            "age": "I am 41 years old and enjoy nurturing both career and home life.",
+            "occupation": "I work as a project manager in a renewable energy company.",
+            "family": "I live with my partner, two children, and our affectionate golden retriever.",
+            "interests": "I enjoy gardening, DIY projects, and watching nature documentaries together.",
+            "lifestyle": "I keep a family-centered lifestyle filled with structure and outdoor time.",
+            "extraversion": 3,
+            "agreeableness": 3,
+            "conscientiousness": 3
+        },
+        "goal": {
+            "inform": {},
+            "request": {
+                "livingroom": {
+                    "view": ""
+                },
+                "entrance": {
+                    "storage": ""
+                }
+            }
+        }
+    },
+    {
+        "id": "ca9c6672-5c5b-4a4d-b870-2de6a0e7a239",
+        "persona": {
+            "age": "I am 29 years old, recently transitioning from student life to career path.",
+            "occupation": "I work as a junior researcher in environmental sustainability projects.",
+            "family": "I live with my partner and we plan to adopt a dog soon.",
+            "interests": "I enjoy hiking, photography, and learning new recipes every weekend.",
+            "lifestyle": "I maintain a peaceful lifestyle focused on nature, simplicity, and balance.",
+            "extraversion": 3,
+            "agreeableness": 3,
+            "conscientiousness": 3
+        },
+        "goal": {
+            "inform": {},
+            "request": {
+                "kitchen": {
+                    "kitchentype": ""
+                },
+                "livingroom": {
+                    "view": ""
+                }
+            }
+        }
+    },
+    {
+        "id": "d29f7b2c-e4a4-47f5-87f8-c8f2e0e4a901",
+        "persona": {
+            "age": "I am 38 years old and actively engaged in career and community outreach.",
+            "occupation": "I work as a city librarian promoting reading and digital literacy programs.",
+            "family": "I live with my wife and our 10-year-old son who loves astronomy.",
+            "interests": "I enjoy reading sci-fi, hosting book clubs, and volunteering weekly.",
+            "lifestyle": "I lead an organized lifestyle that supports education and family connections.",
+            "extraversion": 3,
+            "agreeableness": 3,
+            "conscientiousness": 3
+        },
+        "goal": {
+            "inform": {},
+            "request": {
+                "livingroom": {
+                    "size": ""
+                },
+                "entrance": {
+                    "storage": ""
+                }
+            }
+        }
+    },
+    {
+        "id": "7c7ef890-1186-4c1f-91c5-06f8b045c429",
+        "persona": {
+            "age": "I am 36 years old and building a career while raising a young family.",
+            "occupation": "I work as a chef managing a small but popular Italian restaurant.",
+            "family": "I live with my spouse, our daughter, and a playful black cat.",
+            "interests": "I enjoy cooking with my family, collecting knives, and teaching recipes.",
+            "lifestyle": "I lead an energetic lifestyle filled with flavor, family, and late nights.",
+            "extraversion": 3,
+            "agreeableness": 3,
+            "conscientiousness": 3
+        },
+        "goal": {
+            "inform": {},
+            "request": {
+                "kitchen": {
+                    "kitchentype": ""
+                },
+                "entrance": {
+                    "storage": ""
+                }
+            }
+        }
+    },
+    {
+        "id": "46240931-4b94-4073-8601-e5a0b2118e6d",
+        "persona": {
+            "age": "I am 32 years old, passionate about fitness and long-distance running.",
+            "occupation": "I work as a gym instructor and part-time sportswear product reviewer.",
+            "family": "I live with my dog, who often joins me on trail runs.",
+            "interests": "I enjoy running, fitness blogging, and preparing healthy experimental meals.",
+            "lifestyle": "I maintain an active lifestyle focused on endurance, wellness, and fun.",
+            "extraversion": 3,
+            "agreeableness": 3,
+            "conscientiousness": 3
+        },
+        "goal": {
+            "inform": {},
+            "request": {
+                "kitchen": {
+                    "size": ""
+                },
+                "livingroom": {
+                    "view": ""
+                }
+            }
+        }
+    },
+    {
+        "id": "937728e3-0a78-4561-bf87-1d2060a96ae1",
+        "persona": {
+            "age": "I am 40 years old and balancing creative work with parenting joys.",
+            "occupation": "I work as a graphic designer for a children’s educational media company.",
+            "family": "I live with my partner, twin daughters, and a tank of tropical fish.",
+            "interests": "I enjoy digital drawing, bedtime storytelling, and indoor herb gardening.",
+            "lifestyle": "I live a colorful, family-oriented life full of small creative routines.",
+            "extraversion": 3,
+            "agreeableness": 3,
+            "conscientiousness": 3
+        },
+        "goal": {
+            "inform": {},
+            "request": {
+                "kitchen": {
+                    "kitchentype": ""
+                },
+                "livingroom": {
+                    "view": ""
+                }
+            }
+        }
+    },
+    {
+        "id": "54b8f78c-e4d3-4d64-9c62-ff4b21a39555",
+        "persona": {
+            "age": "I am 35 years old, seeking simplicity and meaningful work-life balance.",
+            "occupation": "I work as a remote customer support lead for a tech startup.",
+            "family": "I live with my partner and our two rescue cats in the countryside.",
+            "interests": "I enjoy journaling, long walks, and trying out local coffee shops.",
+            "lifestyle": "I keep a slow-paced lifestyle that allows rest and mindful productivity.",
+            "extraversion": 3,
+            "agreeableness": 3,
+            "conscientiousness": 3
+        },
+        "goal": {
+            "inform": {},
+            "request": {
+                "livingroom": {
+                    "view": ""
+                },
+                "kitchen": {
+                    "view": ""
+                }
+            }
+        }
+    }
+]
