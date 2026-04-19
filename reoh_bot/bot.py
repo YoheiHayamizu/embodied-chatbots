@@ -31,6 +31,11 @@ from pipecat.services.piper.tts import PiperTTSService
 from pipecat.services.whisper.stt import WhisperSTTService
 from pipecat.transcriptions.language import Language
 from pipecat.transports.daily.transport import DailyParams, DailyTransport
+from pipecat.turns.user_start.vad_user_turn_start_strategy import VADUserTurnStartStrategy
+from pipecat.turns.user_stop.speech_timeout_user_turn_stop_strategy import (
+    SpeechTimeoutUserTurnStopStrategy,
+)
+from pipecat.turns.user_turn_strategies import UserTurnStrategies
 
 from reoh_bot.config import Settings
 from reoh_bot.e2lg_agent import E2LGAgent, E2LGModelSettings, load_prompt_template
@@ -104,9 +109,22 @@ async def run_bot(*, settings: Settings, room_url: str, token: str | None) -> No
     agent = _build_agent(settings)
 
     context = LLMContext()
+    # Pipecat 1.0's default user-turn-stop strategy is the smart-turn analyzer
+    # (LocalSmartTurnAnalyzerV3, a Whisper-based ML model). On CPU — and
+    # especially on Jetson Orin NX — that model is too slow and routinely
+    # returns INCOMPLETE, which silently swallows the user's transcript so
+    # the LLM never gets to run. Swap it for a deterministic timeout-based
+    # stop strategy: VAD detects silence, then we wait briefly to confirm
+    # the user really stopped before committing the turn.
     user_aggregator, assistant_aggregator = LLMContextAggregatorPair(
         context,
-        user_params=LLMUserAggregatorParams(vad_analyzer=SileroVADAnalyzer()),
+        user_params=LLMUserAggregatorParams(
+            vad_analyzer=SileroVADAnalyzer(),
+            user_turn_strategies=UserTurnStrategies(
+                start=[VADUserTurnStartStrategy()],
+                stop=[SpeechTimeoutUserTurnStopStrategy(user_speech_timeout=3.0)],
+            ),
+        ),
     )
 
     pipeline = Pipeline(
