@@ -18,6 +18,7 @@ from __future__ import annotations
 from loguru import logger
 
 from pipecat.audio.vad.silero import SileroVADAnalyzer
+from pipecat.audio.vad.vad_analyzer import VADParams
 from pipecat.frames.frames import EndFrame, LLMRunFrame
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
@@ -124,10 +125,15 @@ async def run_bot(*, settings: Settings, room_url: str, token: str | None) -> No
     # turn is already considered closed and the transcript is discarded
     # — visible as "user stopped speaking (strategy: None)" with no LLM
     # activity that follows. Tune via USER_TURN_STOP_TIMEOUT.
+    # Pipecat's VAD default is stop_secs=0.2 — too short for natural breath
+    # pauses between sentences, so the bot interrupts the visitor mid-thought.
+    # We bump it via VAD_STOP_SECS; the speech_timeout strategy then adds
+    # a small extra buffer on top.
+    vad = SileroVADAnalyzer(params=VADParams(stop_secs=settings.turn.vad_stop_secs))
     user_aggregator, assistant_aggregator = LLMContextAggregatorPair(
         context,
         user_params=LLMUserAggregatorParams(
-            vad_analyzer=SileroVADAnalyzer(),
+            vad_analyzer=vad,
             user_turn_stop_timeout=settings.turn.stop_timeout,
             user_turn_strategies=UserTurnStrategies(
                 start=[VADUserTurnStartStrategy()],
