@@ -32,9 +32,16 @@ from pathlib import Path
 from typing import Mapping
 
 from loguru import logger
+from pipecat.adapters.schemas.function_schema import FunctionSchema
+from pipecat.adapters.schemas.tools_schema import ToolsSchema
 from pipecat.services.anthropic.llm import AnthropicLLMService
+from pipecat.services.llm_service import FunctionCallParams
 
+from reoh_bot.arrival_gate import ArrivalGate
 from reoh_bot.scenarios import Scenario
+
+
+WAIT_FOR_ARRIVAL_TOOL = "wait_for_arrival"
 
 
 @dataclass(frozen=True)
@@ -130,6 +137,46 @@ class E2LGAgent:
             system_prompt=system_prompt,
             llm=llm,
         )
+
+    def attach_arrival_gate(self, gate: ArrivalGate) -> ToolsSchema:
+        """Register the ``wait_for_arrival`` tool on this agent's LLM.
+
+        The tool is what the LLM calls after saying "please follow me": its
+        handler blocks on ``gate.wait()`` until the operator presses Enter
+        in the CLI, at which point the LLM is allowed to describe the next
+        room. The returned ``ToolsSchema`` should be passed to the
+        ``LLMContext`` so Anthropic actually advertises the tool to the model.
+
+        ``cancel_on_interruption`` is **False**: if the visitor speaks while we
+        are waiting for the robot to arrive, that should not abort the
+        movement. The gate is the source of truth for "we are physically in
+        the next room".
+        """
+
+        async def _handle(params: FunctionCallParams) -> None:
+            logger.info("E2LG: wait_for_arrival invoked; blocking on operator")
+            await gate.wait()
+            logger.info("E2LG: wait_for_arrival released; resuming tour")
+            await params.result_callback({"status": "arrived"})
+
+        self.llm.register_function(
+            WAIT_FOR_ARRIVAL_TOOL,
+            _handle,
+            cancel_on_interruption=False,
+        )
+
+        schema = FunctionSchema(
+            name=WAIT_FOR_ARRIVAL_TOOL,
+            description=(
+                "Block until the robot has finished physically moving to the next "
+                "room. Call this after telling the visitor 'please follow me' and "
+                "BEFORE describing any feature of the next room. Takes no arguments "
+                "and returns once the operator confirms arrival."
+            ),
+            properties={},
+            required=[],
+        )
+        return ToolsSchema(standard_tools=[schema])
 
     def opening_directive(self) -> Mapping[str, str]:
         """Return the developer-role message used to seed the first turn.

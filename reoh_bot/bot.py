@@ -15,6 +15,8 @@ Lifecycle:
 
 from __future__ import annotations
 
+import asyncio
+
 from loguru import logger
 
 from pipecat.audio.vad.silero import SileroVADAnalyzer
@@ -38,6 +40,7 @@ from pipecat.turns.user_stop.speech_timeout_user_turn_stop_strategy import (
 )
 from pipecat.turns.user_turn_strategies import UserTurnStrategies
 
+from reoh_bot.arrival_gate import ArrivalGate, run_stdin_signaler
 from reoh_bot.config import Settings
 from reoh_bot.e2lg_agent import E2LGAgent, E2LGModelSettings, load_prompt_template
 from reoh_bot.scenarios import load_scenario
@@ -110,7 +113,13 @@ async def run_bot(*, settings: Settings, room_url: str, token: str | None) -> No
     tts = _build_tts(settings)
     agent = _build_agent(settings)
 
-    context = LLMContext()
+    # Operator-driven arrival gate: the LLM calls ``wait_for_arrival`` after
+    # "please follow me", and that tool blocks until we press Enter in the CLI.
+    # The signaler task pumps stdin lines into the gate.
+    arrival_gate = ArrivalGate()
+    tools = agent.attach_arrival_gate(arrival_gate)
+
+    context = LLMContext(tools=tools)
     # Pipecat 1.0's default user-turn-stop strategy is the smart-turn analyzer
     # (LocalSmartTurnAnalyzerV3, a Whisper-based ML model). On CPU — and
     # especially on Jetson Orin NX — that model is too slow and routinely
@@ -180,10 +189,20 @@ async def run_bot(*, settings: Settings, room_url: str, token: str | None) -> No
         logger.info("Participant left ({}); ending pipeline", reason)
         await task.queue_frame(EndFrame())
 
+    signaler_task = asyncio.create_task(
+        run_stdin_signaler(arrival_gate),
+        name="arrival-gate-signaler",
+    )
+
     runner = PipelineRunner(handle_sigint=False)
     try:
         await runner.run(task)
     except Exception:
         logger.exception("REOH bot pipeline crashed")
     finally:
+        signaler_task.cancel()
+        try:
+            await signaler_task
+        except (asyncio.CancelledError, Exception):  # noqa: BLE001 — best-effort shutdown
+            pass
         logger.info("REOH bot finished for room {}", room_url)

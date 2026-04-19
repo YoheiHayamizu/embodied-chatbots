@@ -113,11 +113,35 @@ curl http://localhost:7861/health
 # {"status":"ok","active_bots":1,"scenario_id":null}
 ```
 
-### On Jetson (aarch64)
+### On Jetson (aarch64, JetPack 5)
 
-`run.sh` works on x86_64 with CUDA. On Jetson you'll need the same
-`LD_PRELOAD` ordering as `smallwebrtc_bot/run-jetson.sh` (libgomp before
-libc10.so) — adapt that script for `reoh_bot.app` if you deploy there.
+Use `./reoh_bot/run-jetson.sh` instead of `run.sh`. It does the same
+`LD_PRELOAD` dance as `smallwebrtc_bot/run-jetson.sh` to work around two
+aarch64-specific failures:
+
+- ctranslate2's bundled libgomp throws *"cannot allocate memory in static TLS
+  block"* when loaded lazily — preload it first.
+- JetPack-built torch wheels need `libc10.so` made globally visible before
+  torchaudio (or anything else) pulls torch in — preload it second.
+
+STT defaults to CPU on aarch64 because the PyPI ctranslate2 wheels for
+aarch64 are built without CUDA support. The script defaults to
+`STT_MODEL=tiny.en` (~5x faster than `small`) and bumps
+`USER_TURN_STOP_TIMEOUT=30` so the aggregator waits long enough for the
+slow CPU inference to finish before declaring the turn over.
+
+If the bot greets you but never replies after that, two failure modes are
+common:
+
+1. **Slow STT, late transcript.** Logs show `User stopped speaking
+   (strategy: None)` with no LLM call after. STT finished after the turn
+   timeout and the transcript was discarded. Lower `STT_MODEL` or raise
+   `USER_TURN_STOP_TIMEOUT`.
+2. **Empty transcript.** Logs show `WhisperSTTService#0 processing time:
+   X.Xs` with no `Transcription: [...]` line after. Whisper flagged the
+   audio as silence and emitted nothing, leaving the user-aggregator
+   stuck. Raise `STT_NO_SPEECH_PROB` (toward 1.0) so more borderline
+   segments are accepted.
 
 ## Environment variables
 
@@ -134,10 +158,14 @@ libc10.so) — adapt that script for `reoh_bot.app` if you deploy there.
 | `STT_MODEL` | `large-v3-turbo` | faster-whisper model id. |
 | `STT_DEVICE` | `auto` | `auto`, `cuda`, or `cpu`. |
 | `STT_COMPUTE_TYPE` | `int8` | quantisation for CTranslate2. |
+| `STT_NO_SPEECH_PROB` | `0.6` | Whisper silence threshold. Raise (toward 1.0) if utterances are being dropped. |
 | `PIPER_VOICE` | `en_US-ryan-high` | Piper voice id. |
 | `PIPER_MODEL_DIR` | `<repo>/models/piper` | Where Piper voices are cached. |
 | `REOH_SCENARIO_DIR` | `<repo>/dataset/reoh/scenarios` | Source of `scenario-*.json`. |
 | `REOH_SCENARIO_ID` | `<first by sort>` | Default scenario for new sessions. |
+| `USER_TURN_STOP_TIMEOUT` | `8.0` | Seconds the aggregator waits before declaring a turn over. **Must exceed STT processing time** — bump to 30 on Jetson. |
+| `USER_SPEECH_TIMEOUT` | `0.6` | Extra seconds the strategy waits after VAD-stop before committing. |
+| `VAD_STOP_SECS` | `0.8` | Seconds of continuous silence VAD requires before declaring "user stopped". Together with `USER_SPEECH_TIMEOUT` this is the total breath-pause budget between sentences. |
 | `REOH_PROMPT_PATH` | `reoh_bot/prompts/e2lg_system_prompt.md` | Override the system prompt. |
 | `HOST` / `PORT` / `RELOAD_FLAG` | `localhost` / `7861` / `--reload` | Used by `run.sh`. |
 
