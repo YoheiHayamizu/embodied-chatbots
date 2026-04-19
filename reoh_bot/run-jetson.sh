@@ -43,6 +43,10 @@ export STT_COMPUTE_TYPE="${STT_COMPUTE_TYPE:-int8}"
 # for short tour-style utterances. Override with STT_MODEL=small for higher
 # accuracy at the cost of latency.
 export STT_MODEL="${STT_MODEL:-tiny.en}"
+# `tiny.en` is prone to flagging real speech as silence; raise the threshold
+# so borderline segments still produce a transcript instead of silently
+# dropping the user's turn.
+export STT_NO_SPEECH_PROB="${STT_NO_SPEECH_PROB:-0.8}"
 export PIPER_VOICE="${PIPER_VOICE:-en_US-ryan-high}"
 export PIPER_MODEL_DIR="${PIPER_MODEL_DIR:-$PWD/models/piper}"
 export LLM_MODEL="${LLM_MODEL:-claude-haiku-4-5}"

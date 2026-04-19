@@ -55,6 +55,7 @@ def _build_stt(settings: Settings) -> WhisperSTTService:
         settings=WhisperSTTService.Settings(
             model=settings.stt.model,
             language=Language.EN,
+            no_speech_prob=settings.stt.no_speech_prob,
         ),
     )
 

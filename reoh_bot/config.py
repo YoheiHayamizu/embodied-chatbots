@@ -35,11 +35,21 @@ def _env_path(name: str, default: Path) -> Path:
 
 @dataclass(frozen=True)
 class STTSettings:
-    """Whisper STT configuration."""
+    """Whisper STT configuration.
+
+    ``no_speech_prob`` is the threshold above which Whisper drops a segment
+    as "probably silence". pipecat's default is 0.4, which is fine for the
+    large models on GPU but too aggressive for ``tiny.en`` on CPU — the
+    model frequently flags real speech as silence and ``run_stt`` emits no
+    frame at all, leaving the user-aggregator stuck waiting. Bumping to 0.6
+    lets borderline segments through. Tune higher (e.g. 0.8) if the bot
+    still misses utterances on Jetson.
+    """
 
     model: str = "large-v3-turbo"
     device: str = "auto"
     compute_type: str = "int8"
+    no_speech_prob: float = 0.6
 
 
 @dataclass(frozen=True)
@@ -137,6 +147,7 @@ class Settings:
                 model=_env("STT_MODEL", "large-v3-turbo"),
                 device=_env("STT_DEVICE", "auto"),
                 compute_type=_env("STT_COMPUTE_TYPE", "int8"),
+                no_speech_prob=float(_env("STT_NO_SPEECH_PROB", "0.6")),
             ),
             tts=TTSSettings(
                 voice=_env("PIPER_VOICE", "en_US-ryan-high"),
