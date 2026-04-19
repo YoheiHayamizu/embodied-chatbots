@@ -59,6 +59,22 @@ class LLMSettings:
 
 
 @dataclass(frozen=True)
+class TurnSettings:
+    """User-turn detection thresholds.
+
+    ``stop_timeout`` MUST exceed the worst-case STT processing latency.
+    Otherwise the user-aggregator declares "user stopped speaking" with no
+    strategy and silently discards the transcript when it eventually
+    arrives — the symptom is a bot that greets you once and then never
+    responds. On Jetson Orin NX with a `small` Whisper model on CPU,
+    keep this at ~30s; on x86_64 with GPU the default 8s is plenty.
+    """
+
+    speech_timeout: float = 0.6
+    stop_timeout: float = 8.0
+
+
+@dataclass(frozen=True)
 class DailySettings:
     """Daily transport / REST configuration."""
 
@@ -91,6 +107,7 @@ class Settings:
     llm: LLMSettings
     daily: DailySettings
     scenario: ScenarioSettings
+    turn: TurnSettings
     prompt_path: Path = DEFAULT_PROMPT_PATH
     host: str = "localhost"
     port: int = 7861
@@ -140,6 +157,10 @@ class Settings:
             scenario=ScenarioSettings(
                 scenario_dir=_env_path("REOH_SCENARIO_DIR", DEFAULT_SCENARIO_DIR),
                 scenario_id=os.getenv("REOH_SCENARIO_ID", "0"),
+            ),
+            turn=TurnSettings(
+                speech_timeout=float(_env("USER_SPEECH_TIMEOUT", "0.6")),
+                stop_timeout=float(_env("USER_TURN_STOP_TIMEOUT", "8.0")),
             ),
             prompt_path=_env_path("REOH_PROMPT_PATH", DEFAULT_PROMPT_PATH),
             host=_env("HOST", "localhost"),

@@ -39,10 +39,17 @@ else
   export STT_DEVICE="${STT_DEVICE:-cuda}"
 fi
 export STT_COMPUTE_TYPE="${STT_COMPUTE_TYPE:-int8}"
-export STT_MODEL="${STT_MODEL:-small}"
+# `tiny.en` is ~5x faster than `small` on aarch64 CPU and accurate enough
+# for short tour-style utterances. Override with STT_MODEL=small for higher
+# accuracy at the cost of latency.
+export STT_MODEL="${STT_MODEL:-tiny.en}"
 export PIPER_VOICE="${PIPER_VOICE:-en_US-ryan-high}"
 export PIPER_MODEL_DIR="${PIPER_MODEL_DIR:-$PWD/models/piper}"
 export LLM_MODEL="${LLM_MODEL:-claude-haiku-4-5}"
+# Bump the user-turn fallback timeout well above the Jetson STT latency
+# budget. If STT finishes after this timeout, the transcript is silently
+# dropped and the bot appears unresponsive.
+export USER_TURN_STOP_TIMEOUT="${USER_TURN_STOP_TIMEOUT:-30}"
 
 if [[ "$(uname -m)" == "aarch64" ]]; then
   PRELOADS=()

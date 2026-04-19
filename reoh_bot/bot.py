@@ -116,13 +116,21 @@ async def run_bot(*, settings: Settings, room_url: str, token: str | None) -> No
     # the LLM never gets to run. Swap it for a deterministic timeout-based
     # stop strategy: VAD detects silence, then we wait briefly to confirm
     # the user really stopped before committing the turn.
+    #
+    # ``user_turn_stop_timeout`` is the safety fallback that fires if no
+    # strategy matches. It MUST exceed the worst-case STT processing
+    # latency, otherwise slow STT (e.g. on Jetson) finishes after the
+    # turn is already considered closed and the transcript is discarded
+    # — visible as "user stopped speaking (strategy: None)" with no LLM
+    # activity that follows. Tune via USER_TURN_STOP_TIMEOUT.
     user_aggregator, assistant_aggregator = LLMContextAggregatorPair(
         context,
         user_params=LLMUserAggregatorParams(
             vad_analyzer=SileroVADAnalyzer(),
+            user_turn_stop_timeout=settings.turn.stop_timeout,
             user_turn_strategies=UserTurnStrategies(
                 start=[VADUserTurnStartStrategy()],
-                stop=[SpeechTimeoutUserTurnStopStrategy(user_speech_timeout=3.0)],
+                stop=[SpeechTimeoutUserTurnStopStrategy(user_speech_timeout=settings.turn.speech_timeout)],
             ),
         ),
     )
