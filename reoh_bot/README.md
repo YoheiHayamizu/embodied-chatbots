@@ -9,7 +9,7 @@ over a [Daily](https://daily.co) room. Same pipeline shape as `smallwebrtc_bot/`
 | Transport | SmallWebRTC (browser ⇄ FastAPI) | Daily (cloud room) |
 | Client | Bundled static page | Any Daily client (Prebuilt, app, SDK) |
 | LLM | Provider-agnostic factory | Anthropic Claude, scenario-bound |
-| Dialog logic | Generic assistant | REOH **E2LG** agent (rewritten) |
+| Dialog logic | Generic assistant | REOH **E2LG** or **SSLG** agent (selectable) |
 
 ## Layout
 
@@ -17,16 +17,45 @@ over a [Daily](https://daily.co) room. Same pipeline shape as `smallwebrtc_bot/`
 reoh_bot/
 ├── __init__.py
 ├── README.md
-├── app.py              # FastAPI: POST /api/start, GET /health
-├── bot.py              # Pipecat pipeline (Daily + Whisper + Claude + Piper + Silero)
-├── config.py           # Frozen-dataclass settings, env-driven
-├── e2lg_agent.py       # Reimplemented E2LG agent (Claude-backed)
-├── scenarios.py        # Scenario JSON loader + property/goal renderers
-├── daily_session.py    # Async REST helper for Daily room/token creation
-├── run.sh              # uv run uvicorn launcher
+├── app.py                       # FastAPI: POST /api/start, GET /health
+├── bot.py                       # Pipecat pipeline (Daily + Whisper + Claude + Piper + Silero)
+├── config.py                    # Frozen-dataclass settings, env-driven
+├── e2lg_agent.py                # End-to-End Language Generation agent
+├── sslg_agent.py                # Strategy-conditioned SLG agent (persona-aware)
+├── persona.py                   # Persona dataclass, strategies, selector, directive
+├── persona_extractor.py         # Synchronous Claude extractor for persona deltas
+├── persona_processor.py         # Pipecat FrameProcessor that injects per-turn directives
+├── scenarios.py                 # Scenario JSON loader + property/goal renderers
+├── daily_session.py             # Async REST helper for Daily room/token creation
+├── arrival_gate.py              # Operator-driven wait_for_arrival gate
+├── run.sh                       # uv run uvicorn launcher
 └── prompts/
-    └── e2lg_system_prompt.md
+    ├── e2lg_system_prompt.md
+    ├── sslg_system_prompt.md
+    └── persona_extractor_prompt.md
 ```
+
+## Agent kinds: E2LG vs SSLG
+
+Select the dialog agent with `REOH_AGENT_KIND`:
+
+- `e2lg` (default) — End-to-End Language Generation. One Claude call per turn.
+  The system prompt is static (cached); the model's decisions about what to
+  say are driven entirely by the prompt and the running dialog history.
+- `sslg` — Strategy-conditioned SLG. Adds a persona-tracking layer. Before
+  each reply, a second (smaller) Claude call reads the visitor's latest
+  utterance and updates an in-memory persona snapshot. A weighted
+  strategy selector then picks one of `logical_appeal`, `emotional_appeal`,
+  `self_modeling`, `personal_story`, `highlight_unique_feature`,
+  `personal_related_inquiry`, or `interest_level_inquiry`, and a short
+  natural-language directive describing that approach is appended to the
+  LLM context as a `developer`-role message. The main system prompt stays
+  cached unchanged.
+
+Extraction is synchronous with the voice turn — expect ~300–800 ms added
+latency per turn when SSLG is enabled. Short utterances
+(`< PERSONA_MIN_UTTERANCE_TOKENS`, default 3) skip extraction to avoid
+burning a Claude call on backchannels like "uh-huh".
 
 ## How it differs from upstream `reoh.agents.e2lg_agent.E2LGAgent`
 
@@ -166,7 +195,17 @@ common:
 | `USER_TURN_STOP_TIMEOUT` | `8.0` | Seconds the aggregator waits before declaring a turn over. **Must exceed STT processing time** — bump to 30 on Jetson. |
 | `USER_SPEECH_TIMEOUT` | `0.6` | Extra seconds the strategy waits after VAD-stop before committing. |
 | `VAD_STOP_SECS` | `0.8` | Seconds of continuous silence VAD requires before declaring "user stopped". Together with `USER_SPEECH_TIMEOUT` this is the total breath-pause budget between sentences. |
-| `REOH_PROMPT_PATH` | `reoh_bot/prompts/e2lg_system_prompt.md` | Override the system prompt. |
+| `REOH_PROMPT_PATH` | `reoh_bot/prompts/e2lg_system_prompt.md` | Override the E2LG system prompt. |
+| `REOH_AGENT_KIND` | `e2lg` | `e2lg` or `sslg`. Case-insensitive. |
+| `REOH_SSLG_PROMPT_PATH` | `reoh_bot/prompts/sslg_system_prompt.md` | Override the SSLG system prompt. |
+| `REOH_PERSONA_ENABLED` | `true` | Set to `false` to skip extraction entirely even when `REOH_AGENT_KIND=sslg` (useful for measuring the overhead). |
+| `PERSONA_EXTRACTOR_MODEL` | `claude-haiku-4-5` | Model used for the persona-extraction sub-call. |
+| `PERSONA_EXTRACTOR_MAX_TOKENS` | `256` | Cap on the extractor's JSON reply. |
+| `PERSONA_EXTRACTOR_TIMEOUT_S` | `4.0` | Hard timeout on the extractor call. On timeout the prior persona is kept. |
+| `PERSONA_MIN_UTTERANCE_TOKENS` | `3` | Utterances shorter than this skip extraction. |
+| `PERSONA_EXTRACTOR_PROMPT_PATH` | `reoh_bot/prompts/persona_extractor_prompt.md` | Override the extractor system prompt. |
+| `STRATEGY_WEIGHTS_JSON` | — | Optional JSON object of `{strategy_name: weight}` overriding the default weights. |
+| `PERSONA_SELECTOR_SEED` | — | Optional integer seed for deterministic strategy selection (tests). |
 | `HOST` / `PORT` / `RELOAD_FLAG` | `localhost` / `7861` / `--reload` | Used by `run.sh`. |
 
 ## Tests

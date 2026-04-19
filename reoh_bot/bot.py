@@ -30,6 +30,7 @@ from pipecat.processors.aggregators.llm_response_universal import (
     LLMContextAggregatorPair,
     LLMUserAggregatorParams,
 )
+from pipecat.processors.frame_processor import FrameProcessor
 from pipecat.services.piper.tts import PiperTTSService
 from pipecat.services.whisper.stt import WhisperSTTService
 from pipecat.transcriptions.language import Language
@@ -41,9 +42,12 @@ from pipecat.turns.user_stop.speech_timeout_user_turn_stop_strategy import (
 from pipecat.turns.user_turn_strategies import UserTurnStrategies
 
 from reoh_bot.arrival_gate import ArrivalGate, run_stdin_signaler
-from reoh_bot.config import Settings
+from reoh_bot.config import AGENT_KIND_SSLG, Settings
 from reoh_bot.e2lg_agent import E2LGAgent, E2LGModelSettings, load_prompt_template
+from reoh_bot.persona import DEFAULT_STRATEGY_WEIGHTS
+from reoh_bot.persona_extractor import load_extractor_prompt
 from reoh_bot.scenarios import load_scenario
+from reoh_bot.sslg_agent import SSLGAgent, SSLGModelSettings
 
 
 def _build_stt(settings: Settings) -> WhisperSTTService:
@@ -73,7 +77,7 @@ def _build_tts(settings: Settings) -> PiperTTSService:
     )
 
 
-def _build_agent(settings: Settings) -> E2LGAgent:
+def _build_e2lg_agent(settings: Settings) -> E2LGAgent:
     scenario = load_scenario(settings.scenario.scenario_dir, settings.scenario.scenario_id)
     prompt_template = load_prompt_template(settings.prompt_path)
     return E2LGAgent.from_scenario(
@@ -83,6 +87,46 @@ def _build_agent(settings: Settings) -> E2LGAgent:
             model=settings.llm.model,
         ),
         prompt_template=prompt_template,
+    )
+
+
+def _build_sslg_agent(settings: Settings, context: LLMContext) -> SSLGAgent:
+    """Build the SSLG agent bound to ``context``.
+
+    The SSLG agent owns a ``PersonaStrategyProcessor`` that needs a handle
+    to the shared :class:`LLMContext` so it can read the latest user
+    message and append per-turn directives. We thread the context through
+    here rather than letting the agent construct one, because the
+    ``LLMContextAggregatorPair`` downstream must operate on the *same*
+    context instance.
+    """
+    scenario = load_scenario(settings.scenario.scenario_dir, settings.scenario.scenario_id)
+    prompt_template = load_prompt_template(settings.sslg_prompt_path)
+    extractor_prompt = load_extractor_prompt(settings.persona.prompt_path)
+
+    # Empty dict from env means "use library defaults"; passing it straight
+    # into the agent would zero out every weight.
+    weights = (
+        dict(settings.persona.strategy_weights)
+        if settings.persona.strategy_weights
+        else dict(DEFAULT_STRATEGY_WEIGHTS)
+    )
+
+    return SSLGAgent.from_scenario(
+        scenario=scenario,
+        settings=SSLGModelSettings(
+            api_key=settings.llm.api_key,
+            model=settings.llm.model,
+            persona_extractor_model=settings.persona.extractor_model,
+            persona_extractor_max_tokens=settings.persona.extractor_max_tokens,
+            persona_extractor_timeout_s=settings.persona.extractor_timeout_s,
+            persona_min_utterance_tokens=settings.persona.extractor_min_utterance_tokens,
+            strategy_weights=weights,
+            strategy_selector_seed=settings.persona.selector_seed,
+        ),
+        prompt_template=prompt_template,
+        extractor_prompt=extractor_prompt,
+        context=context,
     )
 
 
@@ -111,15 +155,23 @@ async def run_bot(*, settings: Settings, room_url: str, token: str | None) -> No
 
     stt = _build_stt(settings)
     tts = _build_tts(settings)
-    agent = _build_agent(settings)
+
+    # SSLG needs a handle to the shared LLMContext *at construction time*
+    # (so its PersonaStrategyProcessor can read/write that context); E2LG
+    # does not. Build the context first in both cases so both paths share
+    # one instance.
+    context = LLMContext()
+    if settings.agent_kind == AGENT_KIND_SSLG:
+        agent = _build_sslg_agent(settings, context)
+    else:
+        agent = _build_e2lg_agent(settings)
 
     # Operator-driven arrival gate: the LLM calls ``wait_for_arrival`` after
     # "please follow me", and that tool blocks until we press Enter in the CLI.
     # The signaler task pumps stdin lines into the gate.
     arrival_gate = ArrivalGate()
     tools = agent.attach_arrival_gate(arrival_gate)
-
-    context = LLMContext(tools=tools)
+    context.set_tools(tools)
     # Pipecat 1.0's default user-turn-stop strategy is the smart-turn analyzer
     # (LocalSmartTurnAnalyzerV3, a Whisper-based ML model). On CPU — and
     # especially on Jetson Orin NX — that model is too slow and routinely
@@ -151,17 +203,15 @@ async def run_bot(*, settings: Settings, room_url: str, token: str | None) -> No
         ),
     )
 
-    pipeline = Pipeline(
-        [
-            transport.input(),
-            stt,
-            user_aggregator,
-            agent.llm,
-            tts,
-            transport.output(),
-            assistant_aggregator,
-        ]
-    )
+    # SSLG inserts the persona/strategy processor between the user
+    # aggregator (which appends the visitor's transcript to ``context``)
+    # and the LLM (which generates the reply). E2LG runs the classic
+    # pipeline without an intermediate processor.
+    pipeline_steps: list[FrameProcessor] = [transport.input(), stt, user_aggregator]
+    if isinstance(agent, SSLGAgent):
+        pipeline_steps.append(agent.persona_processor)
+    pipeline_steps += [agent.llm, tts, transport.output(), assistant_aggregator]
+    pipeline = Pipeline(pipeline_steps)
 
     task = PipelineTask(
         pipeline,

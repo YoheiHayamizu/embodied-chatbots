@@ -9,18 +9,28 @@ override settings in tests by constructing a fresh ``Settings``.
 
 from __future__ import annotations
 
+import json
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Mapping
 
 _PACKAGE_ROOT = Path(__file__).resolve().parent
 _REPO_ROOT = _PACKAGE_ROOT.parent
 
 DEFAULT_PROMPT_PATH = _PACKAGE_ROOT / "prompts" / "e2lg_system_prompt.md"
+DEFAULT_SSLG_PROMPT_PATH = _PACKAGE_ROOT / "prompts" / "sslg_system_prompt.md"
+DEFAULT_PERSONA_EXTRACTOR_PROMPT_PATH = (
+    _PACKAGE_ROOT / "prompts" / "persona_extractor_prompt.md"
+)
 DEFAULT_PIPER_MODEL_DIR = _REPO_ROOT / "models" / "piper"
 # Scenarios live under <repo>/dataset/reoh/scenarios/ (a sibling of reoh_bot/).
 # Override with REOH_SCENARIO_DIR if the dataset lives elsewhere.
 DEFAULT_SCENARIO_DIR = _REPO_ROOT / "dataset" / "reoh" / "scenarios"
+
+AGENT_KIND_E2LG = "e2lg"
+AGENT_KIND_SSLG = "sslg"
+SUPPORTED_AGENT_KINDS = frozenset({AGENT_KIND_E2LG, AGENT_KIND_SSLG})
 
 
 def _env(name: str, default: str) -> str:
@@ -116,6 +126,31 @@ class ScenarioSettings:
 
 
 @dataclass(frozen=True)
+class PersonaSettings:
+    """Knobs for the SSLG persona-tracking + strategy-selection layer.
+
+    Only used when ``Settings.agent_kind == "sslg"``. The defaults are
+    tuned for a single Claude Haiku extractor call per user turn, with a
+    4-second upper bound that keeps total turn latency under a second in
+    the good path and well under the aggregator's ``stop_timeout`` even
+    on a slow API response.
+
+    ``strategy_weights`` starts empty so the code path picks up
+    :data:`reoh_bot.persona.DEFAULT_STRATEGY_WEIGHTS`; overriding it via
+    ``STRATEGY_WEIGHTS_JSON`` is considered an advanced knob.
+    """
+
+    enabled: bool = True
+    extractor_model: str = "claude-haiku-4-5"
+    extractor_max_tokens: int = 256
+    extractor_timeout_s: float = 4.0
+    extractor_min_utterance_tokens: int = 3
+    strategy_weights: Mapping[str, float] = field(default_factory=dict)
+    selector_seed: int | None = None
+    prompt_path: Path = DEFAULT_PERSONA_EXTRACTOR_PROMPT_PATH
+
+
+@dataclass(frozen=True)
 class Settings:
     """Top-level settings aggregating every subsystem.
 
@@ -129,7 +164,10 @@ class Settings:
     daily: DailySettings
     scenario: ScenarioSettings
     turn: TurnSettings
+    persona: PersonaSettings
+    agent_kind: str = AGENT_KIND_E2LG
     prompt_path: Path = DEFAULT_PROMPT_PATH
+    sslg_prompt_path: Path = DEFAULT_SSLG_PROMPT_PATH
     host: str = "localhost"
     port: int = 7861
 
@@ -152,6 +190,32 @@ class Settings:
             raise RuntimeError(
                 "Either DAILY_API_KEY (to create rooms) or DAILY_ROOM_URL (to join an existing room) must be set."
             )
+
+        agent_kind = _env("REOH_AGENT_KIND", AGENT_KIND_E2LG).strip().lower()
+        if agent_kind not in SUPPORTED_AGENT_KINDS:
+            raise RuntimeError(
+                f"Unsupported REOH_AGENT_KIND={agent_kind!r}; "
+                f"expected one of {sorted(SUPPORTED_AGENT_KINDS)}."
+            )
+
+        strategy_weights_raw = os.getenv("STRATEGY_WEIGHTS_JSON", "").strip()
+        if strategy_weights_raw:
+            try:
+                parsed = json.loads(strategy_weights_raw)
+            except json.JSONDecodeError as exc:
+                raise RuntimeError(
+                    "STRATEGY_WEIGHTS_JSON is not valid JSON"
+                ) from exc
+            if not isinstance(parsed, dict):
+                raise RuntimeError("STRATEGY_WEIGHTS_JSON must decode to an object")
+            strategy_weights: Mapping[str, float] = {
+                str(k): float(v) for k, v in parsed.items()
+            }
+        else:
+            strategy_weights = {}
+
+        selector_seed_raw = os.getenv("PERSONA_SELECTOR_SEED", "")
+        selector_seed = int(selector_seed_raw) if selector_seed_raw else None
 
         return cls(
             stt=STTSettings(
@@ -185,7 +249,29 @@ class Settings:
                 stop_timeout=float(_env("USER_TURN_STOP_TIMEOUT", "8.0")),
                 vad_stop_secs=float(_env("VAD_STOP_SECS", "0.8")),
             ),
+            persona=PersonaSettings(
+                enabled=_env("REOH_PERSONA_ENABLED", "true").lower()
+                not in {"0", "false", "no"},
+                extractor_model=_env(
+                    "PERSONA_EXTRACTOR_MODEL", "claude-haiku-4-5"
+                ),
+                extractor_max_tokens=int(_env("PERSONA_EXTRACTOR_MAX_TOKENS", "256")),
+                extractor_timeout_s=float(_env("PERSONA_EXTRACTOR_TIMEOUT_S", "4.0")),
+                extractor_min_utterance_tokens=int(
+                    _env("PERSONA_MIN_UTTERANCE_TOKENS", "3")
+                ),
+                strategy_weights=strategy_weights,
+                selector_seed=selector_seed,
+                prompt_path=_env_path(
+                    "PERSONA_EXTRACTOR_PROMPT_PATH",
+                    DEFAULT_PERSONA_EXTRACTOR_PROMPT_PATH,
+                ),
+            ),
+            agent_kind=agent_kind,
             prompt_path=_env_path("REOH_PROMPT_PATH", DEFAULT_PROMPT_PATH),
+            sslg_prompt_path=_env_path(
+                "REOH_SSLG_PROMPT_PATH", DEFAULT_SSLG_PROMPT_PATH
+            ),
             host=_env("HOST", "localhost"),
             port=int(_env("PORT", "7861")),
         )
