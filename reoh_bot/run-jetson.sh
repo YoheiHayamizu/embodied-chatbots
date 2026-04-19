@@ -38,15 +38,20 @@ if [[ "$(uname -m)" == "aarch64" ]]; then
 else
   export STT_DEVICE="${STT_DEVICE:-cuda}"
 fi
-export STT_COMPUTE_TYPE="${STT_COMPUTE_TYPE:-int8}"
-# `tiny.en` is ~5x faster than `small` on aarch64 CPU and accurate enough
-# for short tour-style utterances. Override with STT_MODEL=small for higher
-# accuracy at the cost of latency.
-export STT_MODEL="${STT_MODEL:-tiny.en}"
-# `tiny.en` is prone to flagging real speech as silence; raise the threshold
-# so borderline segments still produce a transcript instead of silently
-# dropping the user's turn.
-export STT_NO_SPEECH_PROB="${STT_NO_SPEECH_PROB:-0.8}"
+# `int8_float32` keeps ctranslate2 weights in int8 (fast on CPU) but does
+# math in float32 (better numerical accuracy than pure int8). Drop to plain
+# `int8` if Whisper is the dominant latency on your hardware.
+export STT_COMPUTE_TYPE="${STT_COMPUTE_TYPE:-int8_float32}"
+# Model accuracy ladder for Jetson Orin NX (CPU, no CUDA):
+#   tiny.en          ~5x faster than small.en, very low accuracy
+#   base.en          ~3x faster than small.en, usable accuracy   ← default
+#   distil-small.en  ~base.en speed, ~small.en accuracy (recommended)
+#   small.en         best accuracy, ~3x slower than base.en
+# Raise STT_MODEL if transcripts are wrong; lower it if STT is the bottleneck.
+export STT_MODEL="${STT_MODEL:-base.en}"
+# Borderline segments are still common on CPU; keep the silence threshold
+# permissive so noisy utterances still yield a transcript.
+export STT_NO_SPEECH_PROB="${STT_NO_SPEECH_PROB:-0.7}"
 export PIPER_VOICE="${PIPER_VOICE:-en_US-ryan-high}"
 export PIPER_MODEL_DIR="${PIPER_MODEL_DIR:-$PWD/models/piper}"
 export LLM_MODEL="${LLM_MODEL:-claude-haiku-4-5}"
