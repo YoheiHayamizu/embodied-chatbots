@@ -9,7 +9,7 @@ soundcard.
 ## Layout
 
 ```
-server/
+smallwebrtc_bot/
 ├── __init__.py
 ├── app.py              # FastAPI app: /api/offer, /health, static mount
 ├── bot.py              # Pipeline builder + run_bot(connection)
@@ -38,9 +38,9 @@ server/
 ## Running
 
 ```bash
-./server/run.sh
+./smallwebrtc_bot/run.sh
 # Equivalent to:
-# uv run uvicorn server.app:app --host localhost --port 7860 --reload
+# uv run uvicorn smallwebrtc_bot.app:app --host localhost --port 7860 --reload
 ```
 
 Open `http://localhost:7860`, click **Connect**, accept the microphone prompt,
@@ -92,7 +92,7 @@ Override with `LLM_MODEL=<name>`.
 ## Tests
 
 ```bash
-uv run pytest server/tests
+uv run pytest smallwebrtc_bot/tests
 ```
 
 The existing `test_llm_factory.py` covers provider dispatch without hitting any

@@ -6,7 +6,7 @@ The app exposes three surfaces:
     ``SmallWebRTCRequestHandler`` takes care of pc_id reuse, renegotiation,
     and single-connection enforcement.
   - ``GET /health``: liveness probe.
-  - ``GET /``: static browser client (``server/static``).
+  - ``GET /``: static browser client (``smallwebrtc_bot/static``).
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ from pipecat.transports.smallwebrtc.request_handler import (
     SmallWebRTCRequestHandler,
 )
 
-from server.bot import run_bot
+from smallwebrtc_bot.bot import run_bot
 
 load_dotenv(override=True)
 
@@ -134,7 +134,7 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(
-        "server.app:app",
+        "smallwebrtc_bot.app:app",
         host=os.getenv("HOST", "localhost"),
         port=int(os.getenv("PORT", "7860")),
         reload=os.getenv("RELOAD", "").lower() in {"1", "true", "yes"},

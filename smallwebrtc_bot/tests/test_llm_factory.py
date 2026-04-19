@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from server.llm_factory import build_llm
+from smallwebrtc_bot.llm_factory import build_llm
 
 
 @pytest.fixture(autouse=True)

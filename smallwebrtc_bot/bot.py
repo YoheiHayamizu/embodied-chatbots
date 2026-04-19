@@ -37,7 +37,7 @@ from pipecat.transports.base_transport import TransportParams
 from pipecat.transports.smallwebrtc.connection import SmallWebRTCConnection
 from pipecat.transports.smallwebrtc.transport import SmallWebRTCTransport
 
-from server.llm_factory import build_llm
+from smallwebrtc_bot.llm_factory import build_llm
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _DEFAULT_PIPER_MODEL_DIR = _REPO_ROOT / "models" / "piper"

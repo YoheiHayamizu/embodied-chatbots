@@ -19,13 +19,13 @@
 # TLS allocation before anything else pulls torch in.
 #
 # Usage:
-#   ./server/run-jetson.sh                  # bind 0.0.0.0:7860
-#   HOST=0.0.0.0 PORT=7860 ./server/run-jetson.sh
+#   ./smallwebrtc_bot/run-jetson.sh                  # bind localhost:7860
+#   HOST=localhost PORT=7860 ./smallwebrtc_bot/run-jetson.sh
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-export HOST="${HOST:-0.0.0.0}"
+export HOST="${HOST:-localhost}"
 export PORT="${PORT:-7860}"
 
 # Jetson-friendly service defaults — override in the environment if the
@@ -77,4 +77,4 @@ PY
   echo "[run-jetson] aarch64 detected; LD_PRELOAD=${LD_PRELOAD:-}"
 fi
 
-exec uv run python -m server.app
+exec uv run python -m smallwebrtc_bot.app
